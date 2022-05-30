@@ -33,19 +33,42 @@ async function handleRegistration(req, res) {
   // Register user
 }
 
-async function hashPassword() {
-  // Randomly generate a salt
-  const hashedPassword = await hasher.hash("password");
-  // Or add in salt
-  // const hashedPassword = await hasher.hash("password", saltString);
+async function loginAuthentication(username, password) {
+  const existingUserCheck = await userDataClient.queryObject({
+    text: "SELECT * FROM users WHERE username = $1",
+    args: [username],
+  });
+  if (existingUserCheck.rowCount > 0) {
+    const userSalt = existingUserCheck.rows[0].salt;
+    const userHashedPassword = existingUserCheck.rows[0].encrypted_password;
+    const passwordEncrypted = await hashPassword(password, userSalt);
+    if (passwordEncrypted === userHashedPassword) {
+      return [true, existingUserCheck];
+    }
+  }
+  return [false];
+}
+
+async function hashPassword(password, salt) {
+  const hashedPassword = await hasher.hash(password, salt);
   return hashedPassword;
 }
 
-async function compare(plainTextPassword, passwordHash) {
-  const auth = hasher.compare(plainTextPassword, passwordHash);
-  if (auth) {
-    console.log("Authenticated!");
-  } else {
-    console.log("Not authenticated. :(");
-  }
+async function createSessionId(userId) {
+  const sessionId = crypto.randomUUID();
+  await userDataClient.queryArray({
+    text: "INSERT INTO sessions (uuid, user_id, created_at) VALUES ($1, $2, NOW())",
+    args: [sessionId, userId],
+  });
+  return sessionId;
+}
+
+async function getCurrentUser(sessionId) {
+  const query =
+    "SELECT * FROM users JOIN sessions ON users.id = sessions.user_id WHERE sessions.created_at < NOW() + INTERVAL '7 DAYS' AND sessions.uuid = $1";
+  const user = await userDataClient.queryObject({
+    text: query,
+    args: [sessionId],
+  });
+  return user;
 }
