@@ -49,6 +49,26 @@ async function loginAuthentication(username, password) {
   return [false];
 }
 
+async function validateRegistrationCredentials(email, username, password, passwordConformation) {
+  const duplicateEmailCheck = await userDataClient.queryArray({
+    text: "SELECT * FROM users WHERE email = $1",
+    args: [email],
+  });
+  const duplicateUsernameCheck = await userDataClient.queryArray({
+    text: "SELECT * FROM users WHERE username = $1",
+    args: [username],
+  });
+  if (
+    duplicateEmailCheck.rowCount < 1 &&
+    duplicateUsernameCheck.rowCount < 1 &&
+    password === passwordConformation &&
+    password.length > 5
+  ) {
+    return true;
+  }
+  return false;
+}
+
 async function hashPassword(password, salt) {
   const hashedPassword = await hasher.hash(password, salt);
   return hashedPassword;
