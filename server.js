@@ -38,7 +38,7 @@ async function handleLogin(req, res) {
 }
 
 async function handleUserLogout(req, res) {
-  const { sessionId } = req.parameters;
+  const { sessionId } = req.params;
   const user = await getCurrentUser(sessionId);
   if (user.count < 1) {
     return res.json({ response: "User not logged in" }).status(400);
