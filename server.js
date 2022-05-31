@@ -7,7 +7,7 @@ const { Client } = require("pg");
 const { response } = require("express");
 
 const app = express();
-const PORT = 8080;
+const PORT = process.env.PORT || 3000;
 const connectionString = "postgres://sqlokxrl:tU6XSVGra7oaORqUxVYznMiTNUnwlxdt@tyke.db.elephantsql.com/sqlokxrl";
 const client = new Client(connectionString);
 client.connect();
