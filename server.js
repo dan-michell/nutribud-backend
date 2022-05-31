@@ -38,11 +38,22 @@ async function handleUserLogout(req, res) {
 }
 
 async function handleRegistration(req, res) {
-  // Register user
+  const { username, password, passwordConfirmation } = req.body;
+  const validateCredentials = validateRegistrationCredentials(username, password, passwordConfirmation);
+  if (validateCredentials) {
+    const salt = crypto.randomUUID();
+    const hashedPassword = hashPassword(password, salt);
+    await client.query({
+      text: "INSERT INTO users (username, hashed_password, salt) VALUES ( $1, $2, $3)",
+      args: [username, hashedPassword, salt],
+    });
+    return res.send({ response: "Successful registration" }).status(200);
+  }
+  res.send({ error: "Invalid credentials" }).status(400);
 }
 
 async function loginAuthentication(username, password) {
-  const existingUserCheck = await userDataClient.queryObject({
+  const existingUserCheck = await client.queryObject({
     text: "SELECT * FROM users WHERE username = $1",
     args: [username],
   });
@@ -57,21 +68,12 @@ async function loginAuthentication(username, password) {
   return { isValid: false };
 }
 
-async function validateRegistrationCredentials(email, username, password, passwordConformation) {
-  const duplicateEmailCheck = await userDataClient.queryArray({
-    text: "SELECT * FROM users WHERE email = $1",
-    args: [email],
-  });
-  const duplicateUsernameCheck = await userDataClient.queryArray({
+async function validateRegistrationCredentials(username, password, passwordConformation) {
+  const duplicateUsernameCheck = await client.queryArray({
     text: "SELECT * FROM users WHERE username = $1",
     args: [username],
   });
-  if (
-    duplicateEmailCheck.rowCount < 1 &&
-    duplicateUsernameCheck.rowCount < 1 &&
-    password === passwordConformation &&
-    password.length > 5
-  ) {
+  if (duplicateUsernameCheck.rowCount < 1 && password === passwordConformation && password.length > 5) {
     return true;
   }
   return false;
@@ -89,9 +91,8 @@ async function createSessionId(userId) {
 }
 
 async function getCurrentUser(sessionId) {
-  const query =
-    "SELECT * FROM users JOIN sessions ON users.id = sessions.user_id WHERE sessions.created_at < NOW() + INTERVAL '7 DAYS' AND sessions.uuid = $1";
-  const user = await userDataClient.queryObject({
+  const query = "SELECT * FROM users JOIN sessions ON users.id = sessions.user_id WHERE sessions.created_at < NOW() + INTERVAL '7 DAYS' AND sessions.uuid = $1";
+  const user = await client.queryObject({
     text: query,
     args: [sessionId],
   });
