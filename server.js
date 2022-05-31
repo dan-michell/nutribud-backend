@@ -2,6 +2,7 @@ const express = require("express");
 const cors = require("cors");
 const hasher = require("pbkdf2-password-hash");
 const { Client } = require("pg");
+const serveStatic = require("serve-static");
 
 const app = express();
 const PORT = 8080;
@@ -22,7 +23,14 @@ app.listen(PORT, () => {
 });
 
 async function handleLogin(req, res) {
-  // Login User
+  const { username, password } = req.body;
+  const authorisationInfo = await loginAuthentication(username, password);
+  if (authorisationInfo.isValid) {
+    const userId = authorisation.user.rows[0].id;
+    const sessionId = await createSessionId(userId);
+    return res.json({ sessionID: sessionId });
+  }
+  return res.status(400).json({ error: "Login failed, check details and try again." });
 }
 
 async function handleUserLogout(req, res) {
@@ -54,10 +62,10 @@ async function loginAuthentication(username, password) {
     const userHashedPassword = existingUserCheck.rows[0].encrypted_password;
     const passwordEncrypted = await hashPassword(password, userSalt);
     if (passwordEncrypted === userHashedPassword) {
-      return [true, existingUserCheck];
+      return { isValid: true, user: existingUserCheck };
     }
   }
-  return [false];
+  return { isValid: false };
 }
 
 async function validateRegistrationCredentials(username, password, passwordConformation) {
@@ -78,10 +86,7 @@ async function hashPassword(password, salt) {
 
 async function createSessionId(userId) {
   const sessionId = crypto.randomUUID();
-  await client.queryArray({
-    text: "INSERT INTO sessions (uuid, user_id, created_at) VALUES ($1, $2, NOW())",
-    args: [sessionId, userId],
-  });
+  await client.query("INSERT INTO sessions (uuid, user_id, created_at) VALUES ($1, $2, NOW())", [sessionId, userId]);
   return sessionId;
 }
 
