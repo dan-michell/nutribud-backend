@@ -100,10 +100,3 @@ async function getCurrentUser(sessionId) {
   const user = await client.query(query, [sessionId]);
   return user;
 }
-
-async function queryDb(query, parameters) {
-  await client.connect();
-  const queryResponse = await client.query(query, parameters);
-  await client.end();
-  return queryResponse;
-}
