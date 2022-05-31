@@ -2,6 +2,7 @@ const express = require("express");
 const cors = require("cors");
 const hasher = require("pbkdf2-password-hash");
 const { Client } = require("pg");
+const serveStatic = require("serve-static");
 
 const app = express();
 const PORT = 8080;
@@ -21,7 +22,16 @@ app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}`);
 });
 
-async function handleLogin(req, res) {}
+async function handleLogin(req, res) {
+  const { username, password } = req.body;
+  const authorisationInfo = await loginAuthentication(username, password);
+  if (authorisationInfo.isValid) {
+    const userId = authorisation.user.rows[0].id;
+    const sessionId = await createSessionId(userId);
+    return res.json({ sessionID: sessionId });
+  }
+  return res.status(400).json({ error: "Login failed, check details and try again." });
+}
 
 async function handleUserLogout(req, res) {
   // Logout user, delete from sessions table
@@ -74,10 +84,7 @@ async function hashPassword(password, salt) {
 
 async function createSessionId(userId) {
   const sessionId = crypto.randomUUID();
-  await userDataClient.queryArray({
-    text: "INSERT INTO sessions (uuid, user_id, created_at) VALUES ($1, $2, NOW())",
-    args: [sessionId, userId],
-  });
+  await client.query("INSERT INTO sessions (uuid, user_id, created_at) VALUES ($1, $2, NOW())", [sessionId, userId]);
   return sessionId;
 }
 
