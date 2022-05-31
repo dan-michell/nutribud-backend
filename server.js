@@ -7,7 +7,7 @@ const { Client } = require("pg");
 const { response } = require("express");
 
 const app = express();
-const PORT = 8080;
+// const PORT = 8080;
 const connectionString = "postgres://sqlokxrl:tU6XSVGra7oaORqUxVYznMiTNUnwlxdt@tyke.db.elephantsql.com/sqlokxrl";
 const client = new Client(connectionString);
 client.connect();
@@ -20,13 +20,17 @@ const corsOptions = {
 
 app.use(cors(corsOptions));
 app.use(express.json());
+app.get("/test", async (req, res) => {
+  res.json({ message: "pass!" });
+});
 app.post("/login", handleLogin);
 app.delete("/login", handleUserLogout);
 app.get("/login", getLoggedInUser);
 app.post("/register", handleRegistration);
-app.listen(PORT, () => {
-  console.log(`Example app listening on port ${PORT}`);
-});
+module.exports = app;
+// app.listen(PORT, () => {
+//   console.log(`Example app listening on port ${PORT}`);
+// });
 
 async function handleLogin(req, res) {
   const { username, password } = req.body;
@@ -109,8 +113,7 @@ async function createSessionId(userId) {
 }
 
 async function getCurrentUser(sessionId) {
-  const query =
-    "SELECT * FROM users JOIN sessions ON users.id = sessions.user_id WHERE sessions.created_at < NOW() + INTERVAL '7 DAYS' AND sessions.uuid = $1";
+  const query = "SELECT * FROM users JOIN sessions ON users.id = sessions.user_id WHERE sessions.created_at < NOW() + INTERVAL '7 DAYS' AND sessions.uuid = $1";
   const user = await client.query(query, [sessionId]);
   return user.rows;
 }
