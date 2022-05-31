@@ -12,21 +12,31 @@ const connectionString = "postgres://sqlokxrl:tU6XSVGra7oaORqUxVYznMiTNUnwlxdt@t
 const client = new Client(connectionString);
 client.connect();
 const corsOptions = {
-  origin: ["http://localhost:3000", "http://nutribud.sigmalabs.co.uk"],
+  origin: ["http://localhost:3000", "https://nutribud-frontend.sigmalabs.co.uk"],
   credentials: true,
 };
 
 app.use(cors(corsOptions));
 app.use(express.json());
 app.use(cookieParser());
+app.get("/", (req, res) => {
+  res.json({ response: "running" });
+});
 app.post("/login", handleLogin);
 app.delete("/login", handleUserLogout);
 app.get("/login", getLoggedInUser);
 app.post("/register", handleRegistration);
-module.exports = app;
+app.get("/search", handleItemSearch);
+app.post("/tracking", handleTrackItem);
+app.get("/tracking", getUserTrackedItems);
+app.get("/performance-history", getUserPerformance);
+app.get("/goals", getUserGoals);
+app.patch("/goals", updateUserGoals);
+app.patch("/user-info", updateUserInfo);
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}`);
 });
+module.exports = app;
 
 async function handleLogin(req, res) {
   const { username, password } = req.body;
@@ -73,6 +83,20 @@ async function getLoggedInUser(req, res) {
     return res.json({ response: false });
   }
 }
+
+async function handleItemSearch(req, res) {}
+
+async function handleTrackItem(req, res) {}
+
+async function getUserTrackedItems(req, res) {}
+
+async function getUserPerformance(req, res) {}
+
+async function getUserGoals(req, res) {}
+
+async function updateUserGoals(req, res) {}
+
+async function updateUserInfo(req, res) {}
 
 async function loginAuthentication(username, password) {
   const query = "SELECT * FROM users WHERE username = $1";
