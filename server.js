@@ -21,9 +21,7 @@ app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}`);
 });
 
-async function handleLogin(req, res) {
-  // Login User
-}
+async function handleLogin(req, res) {}
 
 async function handleUserLogout(req, res) {
   // Logout user, delete from sessions table
@@ -43,10 +41,10 @@ async function loginAuthentication(username, password) {
     const userHashedPassword = existingUserCheck.rows[0].encrypted_password;
     const passwordEncrypted = await hashPassword(password, userSalt);
     if (passwordEncrypted === userHashedPassword) {
-      return [true, existingUserCheck];
+      return { isValid: true, user: existingUserCheck };
     }
   }
-  return [false];
+  return { isValid: false };
 }
 
 async function validateRegistrationCredentials(email, username, password, passwordConformation) {
