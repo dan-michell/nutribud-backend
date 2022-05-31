@@ -9,5 +9,6 @@ Packages installed:
 - npm install pg
 - npm install bcrypt
 - npm install crypto
-- npm install --save-dev jest
+- npm install jest --save-dev
 - npm install supertest --save-dev
+

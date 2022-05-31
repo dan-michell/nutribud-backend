@@ -1,5 +1,6 @@
 const express = require("express");
 const cors = require("cors");
+const cookieParser = require("cookie-parser");
 const hasher = require("pbkdf2-password-hash");
 const bcrypt = require("bcrypt");
 const crypto = require("crypto");
@@ -7,30 +8,26 @@ const { Client } = require("pg");
 const { response } = require("express");
 
 const app = express();
-// const PORT = 8080;
+const PORT = process.env.PORT || 8080;
 const connectionString = "postgres://sqlokxrl:tU6XSVGra7oaORqUxVYznMiTNUnwlxdt@tyke.db.elephantsql.com/sqlokxrl";
 const client = new Client(connectionString);
 client.connect();
 const corsOptions = {
-  origin: "http://localhost:3000",
+  origin: ["http://localhost:3000", "http://nutribud.sigmalabs.co.uk"],
   credentials: true,
-  // also has:
-  // methods, allowedHeaders, credentials, maxAge, etc...
 };
 
 app.use(cors(corsOptions));
 app.use(express.json());
-app.get("/test", async (req, res) => {
-  res.json({ message: "pass!" });
-});
+app.use(cookieParser());
 app.post("/login", handleLogin);
 app.delete("/login", handleUserLogout);
 app.get("/login", getLoggedInUser);
 app.post("/register", handleRegistration);
 module.exports = app;
-// app.listen(PORT, () => {
-//   console.log(`Example app listening on port ${PORT}`);
-// });
+app.listen(PORT, () => {
+  console.log(`Example app listening on port ${PORT}`);
+});
 
 async function handleLogin(req, res) {
   const { username, password } = req.body;
@@ -38,19 +35,20 @@ async function handleLogin(req, res) {
   if (authorisationInfo.isValid) {
     const userId = authorisationInfo.user.rows[0].id;
     const sessionId = await createSessionId(userId);
-    return res.json({ response: sessionId });
+    res.cookie("sessionId", sessionId);
+    return res.json({ response: "Login Success!" });
   }
   return res.status(400).json({ error: "Login failed, check details and try again." });
 }
 
 async function handleUserLogout(req, res) {
-  const { sessionId } = req.params;
+  const sessionId = req.cookies.sessionId;
   const user = await getCurrentUser(sessionId);
   if (user.length < 1) {
     return res.status(400).json({ error: "User not logged in" });
   }
   const query = `DELETE FROM sessions WHERE user_id = $1`;
-  await client.query(query, [user.id]);
+  await client.query(query, [user[0].id]);
   return res.json({ response: "Successfully logged out" });
 }
 
@@ -68,8 +66,8 @@ async function handleRegistration(req, res) {
 }
 
 async function getLoggedInUser(req, res) {
-  const sessionId = req.params;
-  const user = getCurrentUser(sessionId);
+  const sessionId = req.cookies.sessionId;
+  const user = await getCurrentUser(sessionId);
   if (user.length > 0) {
     return res.json({ response: true });
   } else {
