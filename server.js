@@ -13,7 +13,7 @@ const connectionString = "postgres://sqlokxrl:tU6XSVGra7oaORqUxVYznMiTNUnwlxdt@t
 const client = new Client(connectionString);
 client.connect();
 const corsOptions = {
-  origin: "http://localhost:3000",
+  origin: ["http://localhost:3000", "http://nutribud.sigmalabs.co.uk"],
   credentials: true,
 };
 
