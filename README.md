@@ -10,3 +10,5 @@ Packages installed:
 - npm install bcrypt
 - npm install crypto
 - npm install jest --save-dev
+- npm install supertest --save-dev
+

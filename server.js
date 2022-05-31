@@ -24,6 +24,7 @@ app.post("/login", handleLogin);
 app.delete("/login", handleUserLogout);
 app.get("/login", getLoggedInUser);
 app.post("/register", handleRegistration);
+module.exports = app;
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}`);
 });
