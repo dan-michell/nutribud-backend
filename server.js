@@ -4,6 +4,7 @@ const hasher = require("pbkdf2-password-hash");
 const bcrypt = require("bcrypt");
 const crypto = require("crypto");
 const { Client } = require("pg");
+const { response } = require("express");
 
 const app = express();
 const PORT = 8080;
@@ -21,6 +22,7 @@ app.use(cors(corsOptions));
 app.use(express.json());
 app.post("/login", handleLogin);
 app.delete("/login", handleUserLogout);
+app.get("/login", getLoggedInUser);
 app.post("/register", handleRegistration);
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}`);
@@ -40,8 +42,8 @@ async function handleLogin(req, res) {
 async function handleUserLogout(req, res) {
   const { sessionId } = req.params;
   const user = await getCurrentUser(sessionId);
-  if (user.count < 1) {
-    return res.json({ response: "User not logged in" }).status(400);
+  if (user.length < 1) {
+    return res.status(400).json({ error: "User not logged in" });
   }
   const query = `DELETE FROM sessions WHERE user_id = $1`;
   await client.query(query, [user.id]);
@@ -59,6 +61,16 @@ async function handleRegistration(req, res) {
     return res.json({ response: "Successful registration" });
   }
   return res.status(400).json({ error: "Invalid credentials" });
+}
+
+async function getLoggedInUser(req, res) {
+  const sessionId = req.params;
+  const user = getCurrentUser(sessionId);
+  if (user.length > 0) {
+    return res.json({ response: true });
+  } else {
+    return res.json({ response: false });
+  }
 }
 
 async function loginAuthentication(username, password) {
@@ -97,7 +109,8 @@ async function createSessionId(userId) {
 }
 
 async function getCurrentUser(sessionId) {
-  const query = "SELECT * FROM users JOIN sessions ON users.id = sessions.user_id WHERE sessions.created_at < NOW() + INTERVAL '7 DAYS' AND sessions.uuid = $1";
+  const query =
+    "SELECT * FROM users JOIN sessions ON users.id = sessions.user_id WHERE sessions.created_at < NOW() + INTERVAL '7 DAYS' AND sessions.uuid = $1";
   const user = await client.query(query, [sessionId]);
-  return user;
+  return user.rows;
 }
