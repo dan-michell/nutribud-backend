@@ -38,7 +38,14 @@ async function handleLogin(req, res) {
 }
 
 async function handleUserLogout(req, res) {
-  // Logout user, delete from sessions table
+  const { sessionId } = req.parameters;
+  const user = await getCurrentUser(sessionId);
+  if (user.count < 1) {
+    return res.json({ response: "User not logged in" }).status(400);
+  }
+  const query = `DELETE FROM sessions WHERE user_id = $1`;
+  await client.query(query, [user.id]);
+  return res.json({ response: "Successfully logged out" });
 }
 
 async function handleRegistration(req, res) {
@@ -93,11 +100,4 @@ async function getCurrentUser(sessionId) {
   const query = "SELECT * FROM users JOIN sessions ON users.id = sessions.user_id WHERE sessions.created_at < NOW() + INTERVAL '7 DAYS' AND sessions.uuid = $1";
   const user = await client.query(query, [sessionId]);
   return user;
-}
-
-async function queryDb(query, parameters) {
-  await client.connect();
-  const queryResponse = await client.query(query, parameters);
-  await client.end();
-  return queryResponse;
 }
