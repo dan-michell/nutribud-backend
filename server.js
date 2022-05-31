@@ -1,5 +1,6 @@
 const express = require("express");
 const cors = require("cors");
+const cookieParser = require("cookie-parser");
 const hasher = require("pbkdf2-password-hash");
 const bcrypt = require("bcrypt");
 const crypto = require("crypto");
@@ -14,12 +15,11 @@ client.connect();
 const corsOptions = {
   origin: "http://localhost:3000",
   credentials: true,
-  // also has:
-  // methods, allowedHeaders, credentials, maxAge, etc...
 };
 
 app.use(cors(corsOptions));
 app.use(express.json());
+app.use(cookieParser());
 app.post("/login", handleLogin);
 app.delete("/login", handleUserLogout);
 app.get("/login", getLoggedInUser);
@@ -34,13 +34,14 @@ async function handleLogin(req, res) {
   if (authorisationInfo.isValid) {
     const userId = authorisationInfo.user.rows[0].id;
     const sessionId = await createSessionId(userId);
-    return res.json({ response: sessionId });
+    res.cookies("sessionId", sessionId);
+    return res.json({ response: "Login Success!" });
   }
   return res.status(400).json({ error: "Login failed, check details and try again." });
 }
 
 async function handleUserLogout(req, res) {
-  const { sessionId } = req.params;
+  const sessionId = req.cookies.sessionId;
   const user = await getCurrentUser(sessionId);
   if (user.length < 1) {
     return res.status(400).json({ error: "User not logged in" });
@@ -64,7 +65,7 @@ async function handleRegistration(req, res) {
 }
 
 async function getLoggedInUser(req, res) {
-  const sessionId = req.params;
+  const sessionId = req.cookies.sessionId;
   const user = getCurrentUser(sessionId);
   if (user.length > 0) {
     return res.json({ response: true });
