@@ -64,7 +64,7 @@ async function handleRegistration(req, res) {
 }
 
 async function getLoggedInUser(req, res) {
-  const sessionId = req.parameters;
+  const sessionId = req.params;
   const user = getCurrentUser(sessionId);
   if (user.length > 0) {
     return res.json({ response: true });
