@@ -1,1 +1,1 @@
-web: DENO_ENV = production; //NODE RUN
+web: NODE_ENV = production;
