@@ -1,13 +1,15 @@
 const express = require("express");
 const cors = require("cors");
 const hasher = require("pbkdf2-password-hash");
+const bcrypt = require("bcrypt");
+const crypto = require("crypto");
 const { Client } = require("pg");
-const serveStatic = require("serve-static");
 
 const app = express();
 const PORT = 8080;
 const connectionString = "postgres://sqlokxrl:tU6XSVGra7oaORqUxVYznMiTNUnwlxdt@tyke.db.elephantsql.com/sqlokxrl";
 const client = new Client(connectionString);
+client.connect();
 const corsOptions = {
   origin: "http://localhost:3000",
   // also has:
@@ -15,6 +17,7 @@ const corsOptions = {
 };
 
 app.use(cors(corsOptions));
+app.use(express.json());
 app.post("/login", handleLogin);
 app.delete("/login", handleUserLogout);
 app.post("/register", handleRegistration);
@@ -26,7 +29,7 @@ async function handleLogin(req, res) {
   const { username, password } = req.body;
   const authorisationInfo = await loginAuthentication(username, password);
   if (authorisationInfo.isValid) {
-    const userId = authorisation.user.rows[0].id;
+    const userId = authorisationInfo.user.rows[0].id;
     const sessionId = await createSessionId(userId);
     return res.json({ sessionID: sessionId });
   }
@@ -39,27 +42,25 @@ async function handleUserLogout(req, res) {
 
 async function handleRegistration(req, res) {
   const { username, password, passwordConfirmation } = req.body;
-  const validateCredentials = validateRegistrationCredentials(username, password, passwordConfirmation);
+  const validateCredentials = await validateRegistrationCredentials(username, password, passwordConfirmation);
   if (validateCredentials) {
-    const salt = crypto.randomUUID();
-    const hashedPassword = hashPassword(password, salt);
-    await client.query({
-      text: "INSERT INTO users (username, hashed_password, salt) VALUES ( $1, $2, $3)",
-      args: [username, hashedPassword, salt],
-    });
-    return res.send({ response: "Successful registration" }).status(200);
+    const salt = await bcrypt.genSalt(8);
+    const hashedPassword = await hashPassword(password, salt);
+    await client.query("INSERT INTO users (username, hashed_password, salt) VALUES ( $1, $2, $3)", [
+      username,
+      hashedPassword,
+      salt,
+    ]);
+    return res.json({ response: "Successful registration" });
   }
-  res.send({ error: "Invalid credentials" }).status(400);
+  return res.status(400).json({ error: "Invalid credentials" });
 }
 
 async function loginAuthentication(username, password) {
-  const existingUserCheck = await client.queryObject({
-    text: "SELECT * FROM users WHERE username = $1",
-    args: [username],
-  });
+  const existingUserCheck = await client.query("SELECT * FROM users WHERE username = $1", [username]);
   if (existingUserCheck.rowCount > 0) {
     const userSalt = existingUserCheck.rows[0].salt;
-    const userHashedPassword = existingUserCheck.rows[0].encrypted_password;
+    const userHashedPassword = existingUserCheck.rows[0].hashed_password;
     const passwordEncrypted = await hashPassword(password, userSalt);
     if (passwordEncrypted === userHashedPassword) {
       return { isValid: true, user: existingUserCheck };
@@ -69,11 +70,8 @@ async function loginAuthentication(username, password) {
 }
 
 async function validateRegistrationCredentials(username, password, passwordConformation) {
-  const duplicateUsernameCheck = await client.queryArray({
-    text: "SELECT * FROM users WHERE username = $1",
-    args: [username],
-  });
-  if (duplicateUsernameCheck.rowCount < 1 && password === passwordConformation && password.length > 5) {
+  const duplicateUsernameCheck = await client.query("SELECT * FROM users WHERE username = $1", [username]);
+  if (duplicateUsernameCheck.rowCount < 1 && password === passwordConformation && password.length > 1) {
     return true;
   }
   return false;
@@ -91,10 +89,15 @@ async function createSessionId(userId) {
 }
 
 async function getCurrentUser(sessionId) {
-  const query = "SELECT * FROM users JOIN sessions ON users.id = sessions.user_id WHERE sessions.created_at < NOW() + INTERVAL '7 DAYS' AND sessions.uuid = $1";
-  const user = await client.queryObject({
-    text: query,
-    args: [sessionId],
-  });
+  const query =
+    "SELECT * FROM users JOIN sessions ON users.id = sessions.user_id WHERE sessions.created_at < NOW() + INTERVAL '7 DAYS' AND sessions.uuid = $1";
+  const user = await client.query(query, [sessionId]);
   return user;
+}
+
+async function queryDb(query, parameters) {
+  await client.connect();
+  const queryResponse = await client.query(query, parameters);
+  await client.end();
+  return queryResponse;
 }
