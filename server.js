@@ -5,7 +5,6 @@ const hasher = require("pbkdf2-password-hash");
 const bcrypt = require("bcrypt");
 const crypto = require("crypto");
 const { Client } = require("pg");
-const { response } = require("express");
 
 const app = express();
 const PORT = process.env.PORT || 8080;
