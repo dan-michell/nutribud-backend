@@ -8,7 +8,7 @@ const { Client } = require("pg");
 const { response } = require("express");
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 8080;
 const connectionString = "postgres://sqlokxrl:tU6XSVGra7oaORqUxVYznMiTNUnwlxdt@tyke.db.elephantsql.com/sqlokxrl";
 const client = new Client(connectionString);
 client.connect();
@@ -34,7 +34,7 @@ async function handleLogin(req, res) {
   if (authorisationInfo.isValid) {
     const userId = authorisationInfo.user.rows[0].id;
     const sessionId = await createSessionId(userId);
-    res.cookies("sessionId", sessionId);
+    res.cookie("sessionId", sessionId);
     return res.json({ response: "Login Success!" });
   }
   return res.status(400).json({ error: "Login failed, check details and try again." });
@@ -47,7 +47,7 @@ async function handleUserLogout(req, res) {
     return res.status(400).json({ error: "User not logged in" });
   }
   const query = `DELETE FROM sessions WHERE user_id = $1`;
-  await client.query(query, [user.id]);
+  await client.query(query, [user[0].id]);
   return res.json({ response: "Successfully logged out" });
 }
 
@@ -66,7 +66,7 @@ async function handleRegistration(req, res) {
 
 async function getLoggedInUser(req, res) {
   const sessionId = req.cookies.sessionId;
-  const user = getCurrentUser(sessionId);
+  const user = await getCurrentUser(sessionId);
   if (user.length > 0) {
     return res.json({ response: true });
   } else {
