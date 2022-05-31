@@ -12,6 +12,7 @@ const client = new Client(connectionString);
 client.connect();
 const corsOptions = {
   origin: "http://localhost:3000",
+  credentials: true,
   // also has:
   // methods, allowedHeaders, credentials, maxAge, etc...
 };
@@ -31,7 +32,7 @@ async function handleLogin(req, res) {
   if (authorisationInfo.isValid) {
     const userId = authorisationInfo.user.rows[0].id;
     const sessionId = await createSessionId(userId);
-    return res.json({ sessionID: sessionId });
+    return res.json({ response: sessionId });
   }
   return res.status(400).json({ error: "Login failed, check details and try again." });
 }
