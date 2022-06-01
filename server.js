@@ -234,8 +234,8 @@ function formatParsedData(parsedData) {
     const nutriments = {};
     const image = item["food"]["image"];
     for (const nutrient of Object.keys(rawNutrients)) {
-      const nutrienLabel = nutrientLabels[nutrient];
-      nutriments[nutrienLabel] = rawNutrients[nutrient];
+      const nutrientLabel = nutrientLabels[nutrient];
+      nutriments[nutrientLabel] = rawNutrients[nutrient];
     }
     formattedData.push({ name, nutriments, image, foodId });
   }
