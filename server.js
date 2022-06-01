@@ -198,7 +198,7 @@ async function getNutrientData(body) {
   return nutrientData;
 }
 
-function getFormattedNutriensData(nutrientInfo) {
+function getFormattedNutrientsData(nutrientInfo) {
   const name = nutrientInfo["ingredients"][0]["parsed"][0]["food"];
   const calories = nutrientInfo["calories"];
   const nutriments = {};
@@ -208,7 +208,7 @@ function getFormattedNutriensData(nutrientInfo) {
     const nutrientQuantity = totalNutrients[nutrient]["quantity"];
     nutriments[nutrientName] = nutrientQuantity;
   }
-  const formatedData = { name, calories, nutriments };
+  const formattedData = { name, calories, nutriments };
 
-  return formatedData;
+  return formattedData;
 }
