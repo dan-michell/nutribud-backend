@@ -173,6 +173,7 @@ function formatParsedData(parsedData) {
   };
   for (const item of parsedData["hints"]) {
     const rawNutrients = item["food"]["nutrients"];
+    const foodId = item["food"]["foodId"];
     const name = item["food"]["label"];
     const nutriments = {};
     const image = item["food"]["image"];
@@ -180,7 +181,7 @@ function formatParsedData(parsedData) {
       const nutrienLabel = nutrientLabels[nutrient];
       nutriments[nutrienLabel] = rawNutrients[nutrient];
     }
-    formattedData.push({ name, nutriments, image });
+    formattedData.push({ name, nutriments, image, foodId });
   }
   return formattedData;
 }
