@@ -30,10 +30,13 @@ app.get("/search-text", handleItemSearchText);
 app.get("/search-barcode", handleItemSearchBarcode);
 app.post("/tracking", handleTrackItem);
 app.get("/tracking", getUserTrackedItems);
-app.get("/performance-history", getUserPerformance);
 app.get("/goals", getUserGoals);
+app.post("/goals", handleGoalAddition);
 app.patch("/goals", updateUserGoals);
+app.get("/user-info", getUserInfo);
+app.post("/user-info", handleUserInfoAddition);
 app.patch("/user-info", updateUserInfo);
+app.get("/performance-history", getUserPerformance);
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}`);
 });
@@ -127,13 +130,27 @@ async function getUserTrackedItems(req, res) {
   return res.json({ error: "User has not tracked any items today." });
 }
 
-async function getUserPerformance(req, res) {}
+async function getUserGoals(req, res) {
+  const sessionId = req.cookies.sessionId;
+  const user = await getCurrentUser(sessionId);
+  if (user.length > 1) {
+    const query = "SELECT * FROM user_goals WHERE user_id = $1";
+    const userGoals = await client.query(query, [user[0].id]);
+    return res.json(userGoals);
+  }
+}
 
-async function getUserGoals(req, res) {}
+async function handleGoalAddition(req, res) {}
 
 async function updateUserGoals(req, res) {}
 
+async function getUserInfo(req, res) {}
+
+async function handleUserInfoAddition(req, res) {}
+
 async function updateUserInfo(req, res) {}
+
+async function getUserPerformance(req, res) {}
 
 async function loginAuthentication(username, password) {
   const query = "SELECT * FROM users WHERE username = $1";
