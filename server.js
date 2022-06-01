@@ -6,10 +6,8 @@ const bcrypt = require("bcrypt");
 const crypto = require("crypto");
 const { Client } = require("pg");
 
-const baseFoodParserApiUrl =
-  "https://api.edamam.com/api/food-database/v2/parser?app_id=45463206&app_key=1fa94f20926c60638eb14a7abca872b3";
-const baseFoodNutrientsApiUrl =
-  "https://api.edamam.com/api/food-database/v2/nutrients?app_id=45463206&app_key=1fa94f20926c60638eb14a7abca872b3";
+const baseFoodParserApiUrl = "https://api.edamam.com/api/food-database/v2/parser?app_id=45463206&app_key=1fa94f20926c60638eb14a7abca872b3";
+const baseFoodNutrientsApiUrl = "https://api.edamam.com/api/food-database/v2/nutrients?app_id=45463206&app_key=1fa94f20926c60638eb14a7abca872b3";
 
 const app = express();
 const PORT = process.env.PORT || 8080;
@@ -99,9 +97,7 @@ async function handleItemSearchText(req, res) {
   const parsedData = await parsedResponse.json();
   const formattedParsedData = formatParsedData(parsedData);
 
-  return formattedParsedData.length > 0
-    ? res.json({ response: formattedParsedData })
-    : res.json({ error: `${item} not found` });
+  return formattedParsedData.length > 0 ? res.json({ response: formattedParsedData }) : res.json({ error: `${item} not found` });
 }
 
 async function handleItemSearchBarcode(req, res) {
@@ -120,7 +116,10 @@ async function handleItemSearchBarcode(req, res) {
 }
 
 async function handleTrackItem(req, res) {
-  const { itemInfo, amount } = req.body;
+  let { itemInfo, amount } = req.body;
+  if (Object.keys(itemInfo).includes("foodId")) {
+    itemInfo = await getFullItemInfo(itemInfo);
+  }
   const sessionId = req.cookies.sessionId;
   const user = await getCurrentUser(sessionId);
   if (user.length > 0) {
@@ -202,8 +201,7 @@ async function createSessionId(userId) {
 }
 
 async function getCurrentUser(sessionId) {
-  const query =
-    "SELECT * FROM users JOIN sessions ON users.id = sessions.user_id WHERE sessions.created_at < NOW() + INTERVAL '7 DAYS' AND sessions.uuid = $1";
+  const query = "SELECT * FROM users JOIN sessions ON users.id = sessions.user_id WHERE sessions.created_at < NOW() + INTERVAL '7 DAYS' AND sessions.uuid = $1";
   const user = await client.query(query, [sessionId]);
   return user.rows;
 }
@@ -236,8 +234,8 @@ function formatParsedData(parsedData) {
     const nutriments = {};
     const image = item["food"]["image"];
     for (const nutrient of Object.keys(rawNutrients)) {
-      const nutrienLabel = nutrientLabels[nutrient];
-      nutriments[nutrienLabel] = rawNutrients[nutrient];
+      const nutrientLabel = nutrientLabels[nutrient];
+      nutriments[nutrientLabel] = rawNutrients[nutrient];
     }
     formattedData.push({ name, nutriments, image, foodId });
   }
@@ -262,8 +260,6 @@ async function getNutrientData(body) {
 }
 
 function getFormattedNutrientsData(nutrientInfo) {
-  const name = nutrientInfo["ingredients"][0]["parsed"][0]["food"];
-  const calories = nutrientInfo["calories"];
   const nutriments = {};
   const totalNutrients = nutrientInfo["totalNutrients"];
   for (const nutrient of Object.keys(totalNutrients)) {
@@ -271,7 +267,15 @@ function getFormattedNutrientsData(nutrientInfo) {
     const nutrientQuantity = totalNutrients[nutrient]["quantity"];
     nutriments[nutrientName] = nutrientQuantity;
   }
-  const formattedData = { name, calories, nutriments };
+  const formattedData = nutriments;
 
   return formattedData;
+}
+
+async function getFullItemInfo(itemInfo) {
+  const body = getBodyInfoNutrientFetch(itemInfo["foodId"], 100);
+  const nutrientData = await getNutrientData(body);
+  const formattedNutriments = getFormattedNutrientsData(nutrientData);
+  itemInfo["nutriments"] = formattedNutriments;
+  return itemInfo;
 }
