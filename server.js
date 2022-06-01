@@ -6,8 +6,10 @@ const bcrypt = require("bcrypt");
 const crypto = require("crypto");
 const { Client } = require("pg");
 
-const baseFoodParserApiUrl = "https://api.edamam.com/api/food-database/v2/parser?app_id=45463206&app_key=1fa94f20926c60638eb14a7abca872b3";
-const baseFoodNutrientsApiUrl = "https://api.edamam.com/api/food-database/v2/nutrients?app_id=45463206&app_key=1fa94f20926c60638eb14a7abca872b3";
+const baseFoodParserApiUrl =
+  "https://api.edamam.com/api/food-database/v2/parser?app_id=45463206&app_key=1fa94f20926c60638eb14a7abca872b3";
+const baseFoodNutrientsApiUrl =
+  "https://api.edamam.com/api/food-database/v2/nutrients?app_id=45463206&app_key=1fa94f20926c60638eb14a7abca872b3";
 
 const app = express();
 const PORT = process.env.PORT || 8080;
@@ -97,7 +99,9 @@ async function handleItemSearchText(req, res) {
   const parsedData = await parsedResponse.json();
   const formattedParsedData = formatParsedData(parsedData);
 
-  return formattedParsedData.length > 0 ? res.json({ response: formattedParsedData }) : res.json({ error: `${item} not found` });
+  return formattedParsedData.length > 0
+    ? res.json({ response: formattedParsedData })
+    : res.json({ error: `${item} not found` });
 }
 
 async function handleItemSearchBarcode(req, res) {
@@ -198,9 +202,22 @@ async function createSessionId(userId) {
 }
 
 async function getCurrentUser(sessionId) {
-  const query = "SELECT * FROM users JOIN sessions ON users.id = sessions.user_id WHERE sessions.created_at < NOW() + INTERVAL '7 DAYS' AND sessions.uuid = $1";
+  const query =
+    "SELECT * FROM users JOIN sessions ON users.id = sessions.user_id WHERE sessions.created_at < NOW() + INTERVAL '7 DAYS' AND sessions.uuid = $1";
   const user = await client.query(query, [sessionId]);
   return user.rows;
+}
+
+async function addToUserHistory(itemInfo, amount, userInfo) {
+  const trackedItemId = await getTrackedItemId(itemInfo);
+  const query = "INSERT INTO user_history (item_id, user_id, serving_size_g) VALUES ($1, $2, $3)";
+  await client.query(query, [trackedItemId, userInfo.id, amount]);
+}
+
+async function getTrackedItemId(itemInfo) {
+  const query = "SELECT * FROM tracked_items WHERE item_info = $1";
+  const trackedItem = await client.query(query, [itemInfo]);
+  return trackedItem.rows[0].id;
 }
 
 function formatParsedData(parsedData) {
@@ -226,6 +243,7 @@ function formatParsedData(parsedData) {
   }
   return formattedData;
 }
+
 function getBodyInfoNutrientFetch(foodId, quantity) {
   const measure = "http://www.edamam.com/ontologies/edamam.owl#Measure_gram";
   const body = { ingredients: [{ quantity, measureURI: measure, foodId }] };
@@ -233,7 +251,11 @@ function getBodyInfoNutrientFetch(foodId, quantity) {
 }
 
 async function getNutrientData(body) {
-  const nutrientsResponse = await fetch(`${baseFoodNutrientsApiUrl}`, { method: "POST", headers: { "Content-Type": "application/json" }, body });
+  const nutrientsResponse = await fetch(`${baseFoodNutrientsApiUrl}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body,
+  });
   const nutrientData = await nutrientsResponse.json();
 
   return nutrientData;
