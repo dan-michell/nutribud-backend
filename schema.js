@@ -41,7 +41,7 @@ async function populateDb() {
 
   await client.query(`CREATE TABLE tracked_items (
   id SERIAL PRIMARY KEY,
-  item_info JSON
+  item_info JSONB
   )`);
 
   await client.query(`CREATE TABLE user_history (
