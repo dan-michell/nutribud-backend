@@ -33,10 +33,13 @@ app.get("/search-text", handleItemSearchText);
 app.get("/search-barcode", handleItemSearchBarcode);
 app.post("/tracking", handleTrackItem);
 app.get("/tracking", getUserTrackedItems);
-app.get("/performance-history", getUserPerformance);
 app.get("/goals", getUserGoals);
+app.post("/goals", handleGoalAddition);
 app.patch("/goals", updateUserGoals);
+app.get("/user-info", getUserInfo);
+app.post("/user-info", handleUserInfoAddition);
 app.patch("/user-info", updateUserInfo);
+app.get("/performance-history", getUserPerformance);
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}`);
 });
@@ -57,12 +60,12 @@ async function handleLogin(req, res) {
 async function handleUserLogout(req, res) {
   const sessionId = req.cookies.sessionId;
   const user = await getCurrentUser(sessionId);
-  if (user.length < 1) {
-    return res.status(400).json({ error: "User not logged in" });
+  if (user.length > 0) {
+    const query = `DELETE FROM sessions WHERE user_id = $1`;
+    await client.query(query, [user[0].id]);
+    return res.json({ response: "Successfully logged out" });
   }
-  const query = `DELETE FROM sessions WHERE user_id = $1`;
-  await client.query(query, [user[0].id]);
-  return res.json({ response: "Successfully logged out" });
+  return res.status(400).json({ error: "User not logged in" });
 }
 
 async function handleRegistration(req, res) {
@@ -102,24 +105,62 @@ async function handleItemSearchBarcode(req, res) {
   const response = await fetch(`https://world.openfoodfacts.org/api/v0/product/${barcode}.json`);
   const foodData = await response.json();
   if (foodData.status !== 0) {
-    const productImg = foodData.product.image_front_small_url;
+    const productImg = foodData.product.image_url;
     const nutriments = foodData.product.nutriments;
-    return res.json({ productImg, nutriments });
+    const servingSize = foodData.product.serving_size;
+    const name = foodData.product.product_name;
+    const genericName = foodData.product.generic_name;
+    return res.json({ productImg, nutriments, servingSize, name, genericName });
   }
   return res.json({ error: `No product with barcode ${barcode} found` });
 }
 
-async function handleTrackItem(req, res) {}
+async function handleTrackItem(req, res) {
+  const { itemInfo, amount } = req.body;
+  const sessionId = req.cookies.sessionId;
+  const user = await getCurrentUser(sessionId);
+  if (user.length > 0) {
+    const trackedItemsQuery = "INSERT INTO tracked_items (item_info) VALUES ($1)";
+    await client.query(trackedItemsQuery, [itemInfo]);
+    await addToUserHistory(itemInfo, amount, user[0]);
+    return res.json({ response: "Item track success!" });
+  }
+  return res.json({ error: "Need to be logged in to track items." });
+}
 
-async function getUserTrackedItems(req, res) {}
+async function getUserTrackedItems(req, res) {
+  const sessionId = req.cookies.sessionId;
+  const user = await getCurrentUser(sessionId);
+  const query =
+    "SELECT item_info, serving_size_g FROM user_history JOIN tracked_items ON user_history.item_id = tracked_items.id WHERE user_history.created_at = NOW() AND user_history.user_id = $1";
+  const todayTrackedItems = await client.query(query, [user[0].id]);
+  if (todayTrackedItems.rows.length > 0) {
+    return res.json(todayTrackedItems.rows);
+  }
+  return res.json({ error: "User has not tracked any items today." });
+}
 
-async function getUserPerformance(req, res) {}
+async function getUserGoals(req, res) {
+  const sessionId = req.cookies.sessionId;
+  const user = await getCurrentUser(sessionId);
+  if (user.length > 1) {
+    const query = "SELECT * FROM user_goals WHERE user_id = $1";
+    const userGoals = await client.query(query, [user[0].id]);
+    return res.json(userGoals);
+  }
+}
 
-async function getUserGoals(req, res) {}
+async function handleGoalAddition(req, res) {}
 
 async function updateUserGoals(req, res) {}
 
+async function getUserInfo(req, res) {}
+
+async function handleUserInfoAddition(req, res) {}
+
 async function updateUserInfo(req, res) {}
+
+async function getUserPerformance(req, res) {}
 
 async function loginAuthentication(username, password) {
   const query = "SELECT * FROM users WHERE username = $1";
