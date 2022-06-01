@@ -26,7 +26,8 @@ app.post("/login", handleLogin);
 app.delete("/login", handleUserLogout);
 app.get("/login", getLoggedInUser);
 app.post("/register", handleRegistration);
-app.get("/search", handleItemSearch);
+app.get("/search-text", handleItemSearchText);
+app.get("/search-barcode", handleItemSearchBarcode);
 app.post("/tracking", handleTrackItem);
 app.get("/tracking", getUserTrackedItems);
 app.get("/performance-history", getUserPerformance);
@@ -84,7 +85,9 @@ async function getLoggedInUser(req, res) {
   }
 }
 
-async function handleItemSearch(req, res) {}
+async function handleItemSearchText(req, res) {}
+
+async function handleItemSearchBarcode(req, res) {}
 
 async function handleTrackItem(req, res) {}
 
