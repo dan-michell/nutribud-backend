@@ -92,7 +92,7 @@ async function handleItemSearchBarcode(req, res) {
   const response = await fetch(`https://world.openfoodfacts.org/api/v0/product/${barcode}.json`);
   const foodData = await response.json();
   if (foodData.status !== 0) {
-    const productImg = foodData.product.image_front_small_url;
+    const productImg = foodData.product.image_thumb_url;
     const nutriments = foodData.product.nutriments;
     const servingSize = foodData.product.serving_size;
     const name = foodData.product.product_name;
