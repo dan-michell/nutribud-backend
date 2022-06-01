@@ -93,11 +93,11 @@ async function getLoggedInUser(req, res) {
 
 async function handleItemSearchText(req, res) {
   const { item } = req.query;
+  if (!item) return res.json({ error: "Missing item" }).status(400);
   const parsedResponse = await fetch(`${baseFoodParserApiUrl}&ingr=${item}&nutrition-type=cooking`);
   const parsedData = await parsedResponse.json();
   const formattedParsedData = formatParsedData(parsedData);
-
-  return formattedParsedData.length > 0 ? res.json({ response: formattedParsedData }) : res.json({ error: `${item} not found` });
+  return formattedParsedData.length > 0 ? res.json({ response: formattedParsedData }) : res.json({ error: `${item} not found` }).status(400);
 }
 
 async function handleItemSearchBarcode(req, res) {
