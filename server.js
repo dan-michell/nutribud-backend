@@ -6,8 +6,10 @@ const bcrypt = require("bcrypt");
 const crypto = require("crypto");
 const { Client } = require("pg");
 
-const baseFoodParserApiUrl = "https://api.edamam.com/api/food-database/v2/parser?app_id=45463206&app_key=1fa94f20926c60638eb14a7abca872b3";
-const baseFoodNutrientsApiUrl = "https://api.edamam.com/api/food-database/v2/nutrients?app_id=45463206&app_key=1fa94f20926c60638eb14a7abca872b3";
+const baseFoodParserApiUrl =
+  "https://api.edamam.com/api/food-database/v2/parser?app_id=45463206&app_key=1fa94f20926c60638eb14a7abca872b3";
+const baseFoodNutrientsApiUrl =
+  "https://api.edamam.com/api/food-database/v2/nutrients?app_id=45463206&app_key=1fa94f20926c60638eb14a7abca872b3";
 
 const app = express();
 const PORT = process.env.PORT || 8080;
@@ -97,7 +99,9 @@ async function handleItemSearchText(req, res) {
   const parsedResponse = await fetch(`${baseFoodParserApiUrl}&ingr=${item}&nutrition-type=cooking`);
   const parsedData = await parsedResponse.json();
   const formattedParsedData = formatParsedData(parsedData);
-  return formattedParsedData.length > 0 ? res.json({ response: formattedParsedData }) : res.json({ error: `${item} not found` }).status(400);
+  return formattedParsedData.length > 0
+    ? res.json({ response: formattedParsedData })
+    : res.json({ error: `${item} not found` }).status(400);
 }
 
 async function handleItemSearchBarcode(req, res) {
@@ -110,7 +114,7 @@ async function handleItemSearchBarcode(req, res) {
     const servingSize = foodData.product.serving_size;
     const name = foodData.product.product_name;
     const genericName = foodData.product.generic_name;
-    return res.json({ productImg, nutriments, servingSize, name, genericName });
+    return res.json({ response: { productImg, nutriments, servingSize, name, genericName } });
   }
   return res.json({ error: `No product with barcode ${barcode} found` });
 }
@@ -138,7 +142,7 @@ async function getUserTrackedItems(req, res) {
     "SELECT item_info, serving_size_g FROM user_history JOIN tracked_items ON user_history.item_id = tracked_items.id WHERE user_history.created_at = NOW() AND user_history.user_id = $1";
   const todayTrackedItems = await client.query(query, [user[0].id]);
   if (todayTrackedItems.rows.length > 0) {
-    return res.json(todayTrackedItems.rows);
+    return res.json({ response: todayTrackedItems.rows });
   }
   return res.json({ error: "User has not tracked any items today." });
 }
@@ -149,7 +153,7 @@ async function getUserGoals(req, res) {
   if (user.length > 0) {
     const query = "SELECT * FROM user_goals WHERE user_id = $1";
     const userGoals = await client.query(query, [user[0].id]);
-    return res.json(userGoals);
+    return res.json({ response: userGoals });
   }
   return res.json({ error: "Unable to fetch goals." });
 }
@@ -184,7 +188,7 @@ async function getUserInfo(req, res) {
   if (user.length > 0) {
     const query = "SELECT * FROM user_info WHERE user_id = $1";
     const userInfo = await client.query(query, [user[0].id]);
-    return res.json(userInfo);
+    return res.json({ response: userInfo });
   }
   return res.json({ error: "Unable to fetch info." });
 }
@@ -251,7 +255,8 @@ async function createSessionId(userId) {
 }
 
 async function getCurrentUser(sessionId) {
-  const query = "SELECT * FROM users JOIN sessions ON users.id = sessions.user_id WHERE sessions.created_at < NOW() + INTERVAL '7 DAYS' AND sessions.uuid = $1";
+  const query =
+    "SELECT * FROM users JOIN sessions ON users.id = sessions.user_id WHERE sessions.created_at < NOW() + INTERVAL '7 DAYS' AND sessions.uuid = $1";
   const user = await client.query(query, [sessionId]);
   return user.rows;
 }
