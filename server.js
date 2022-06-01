@@ -94,7 +94,10 @@ async function handleItemSearchBarcode(req, res) {
   if (foodData.status !== 0) {
     const productImg = foodData.product.image_front_small_url;
     const nutriments = foodData.product.nutriments;
-    return res.json({ productImg, nutriments });
+    const servingSize = foodData.product.serving_size;
+    const name = foodData.product.product_name;
+    const genericName = foodData.product.generic_name;
+    return res.json({ productImg, nutriments, servingSize, name, genericName });
   }
   return res.json({ error: `No product with barcode ${barcode} found` });
 }
