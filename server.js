@@ -87,7 +87,17 @@ async function getLoggedInUser(req, res) {
 
 async function handleItemSearchText(req, res) {}
 
-async function handleItemSearchBarcode(req, res) {}
+async function handleItemSearchBarcode(req, res) {
+  const { barcode } = req.query;
+  const response = await fetch(`https://world.openfoodfacts.org/api/v0/product/${barcode}.json`);
+  const foodData = await response.json();
+  if (foodData.status !== 0) {
+    const productImg = foodData.product.image_front_small_url;
+    const nutriments = foodData.product.nutriments;
+    return res.json({ productImg, nutriments });
+  }
+  return res.json({ error: `No product with barcode ${barcode} found` });
+}
 
 async function handleTrackItem(req, res) {}
 
