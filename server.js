@@ -54,12 +54,12 @@ async function handleLogin(req, res) {
 async function handleUserLogout(req, res) {
   const sessionId = req.cookies.sessionId;
   const user = await getCurrentUser(sessionId);
-  if (user.length < 1) {
-    return res.status(400).json({ error: "User not logged in" });
+  if (user.length > 0) {
+    const query = `DELETE FROM sessions WHERE user_id = $1`;
+    await client.query(query, [user[0].id]);
+    return res.json({ response: "Successfully logged out" });
   }
-  const query = `DELETE FROM sessions WHERE user_id = $1`;
-  await client.query(query, [user[0].id]);
-  return res.json({ response: "Successfully logged out" });
+  return res.status(400).json({ error: "User not logged in" });
 }
 
 async function handleRegistration(req, res) {
@@ -102,7 +102,18 @@ async function handleItemSearchBarcode(req, res) {
   return res.json({ error: `No product with barcode ${barcode} found` });
 }
 
-async function handleTrackItem(req, res) {}
+async function handleTrackItem(req, res) {
+  const { itemInfo, amount } = req.body;
+  const sessionId = req.cookies.sessionId;
+  const user = await getCurrentUser(sessionId);
+  if (user.length > 0) {
+    const trackedItemsQuery = "INSERT INTO tracked_items (item_info) VALUES ($1)";
+    await client.query(trackedItemsQuery, [itemInfo]);
+    await addToUserHistory(itemInfo, amount, user[0]);
+    return res.json({ response: "Item track success!" });
+  }
+  return res.json({ error: "Need to be logged in to track items." });
+}
 
 async function getUserTrackedItems(req, res) {}
 
@@ -154,4 +165,16 @@ async function getCurrentUser(sessionId) {
     "SELECT * FROM users JOIN sessions ON users.id = sessions.user_id WHERE sessions.created_at < NOW() + INTERVAL '7 DAYS' AND sessions.uuid = $1";
   const user = await client.query(query, [sessionId]);
   return user.rows;
+}
+
+async function addToUserHistory(itemInfo, amount, userInfo) {
+  const trackedItemId = getTrackedItemId(itemInfo);
+  const query = "INSERT INTO user_history (item_id, user_id, serving_size_g) VALUES ($1, $2, $3)";
+  await client.query(query, [trackedItemId, userInfo.id, amount]);
+}
+
+async function getTrackedItemId(itemInfo) {
+  const query = "SELECT * FROM tracked_items WHERE item_info = $1";
+  const trackedItem = await client.query(query, [itemInfo]);
+  return trackedItem.rows[0].id;
 }
