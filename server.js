@@ -147,22 +147,72 @@ async function getUserTrackedItems(req, res) {
 async function getUserGoals(req, res) {
   const sessionId = req.cookies.sessionId;
   const user = await getCurrentUser(sessionId);
-  if (user.length > 1) {
+  if (user.length > 0) {
     const query = "SELECT * FROM user_goals WHERE user_id = $1";
     const userGoals = await client.query(query, [user[0].id]);
     return res.json(userGoals);
   }
+  return res.json({ error: "Unable to fetch goals." });
 }
 
-async function handleGoalAddition(req, res) {}
+async function handleGoalAddition(req, res) {
+  const sessionId = req.cookies.sessionId;
+  const user = await getCurrentUser(sessionId);
+  if (user.length > 0) {
+    const query = "INSERT INTO user_goals (user_id) VALUES ($1)";
+    await client.query(query, [user[0].id]);
+    return res.json({ response: "Successfully added default nutrition goals." });
+  }
+  return res.json({ error: "Login to initialise nutrition goals" });
+}
 
-async function updateUserGoals(req, res) {}
+async function updateUserGoals(req, res) {
+  const { calories, protein, carbs, fats, sugar, salt, fiber } = req.body;
+  const sessionId = req.cookies.sessionId;
+  const user = await getCurrentUser(sessionId);
+  if (user.length > 0) {
+    const query =
+      "UPDATE user_goals SET calories = $1, protein = $2, carbs = $3, fats = $4, sugar = $5, salt = $6, fiber = $7 WHERE user_id = $8";
+    await client.query(query, [calories, protein, carbs, fats, sugar, salt, fiber, user[0].id]);
+    return res.json({ response: "Successfully updated nutrition goals." });
+  }
+  return res.json({ error: "Login to update nutrition goals" });
+}
 
-async function getUserInfo(req, res) {}
+async function getUserInfo(req, res) {
+  const sessionId = req.cookies.sessionId;
+  const user = await getCurrentUser(sessionId);
+  if (user.length > 0) {
+    const query = "SELECT * FROM user_info WHERE user_id = $1";
+    const userInfo = await client.query(query, [user[0].id]);
+    return res.json(userInfo);
+  }
+  return res.json({ error: "Unable to fetch info." });
+}
 
-async function handleUserInfoAddition(req, res) {}
+async function handleUserInfoAddition(req, res) {
+  const { name, age, weight, height } = req.body;
+  const sessionId = req.cookies.sessionId;
+  const user = await getCurrentUser(sessionId);
+  if (user.length > 0) {
+    const query = "INSERT INTO user_info (user_id, name, age, weight, height) VALUES ($1, $2, $3, $4, $5)";
+    await client.query(query, [user[0].id, name, age, weight, height]);
+    return res.json({ response: "Successfully added to user info." });
+  }
+  return res.json({ error: "Login to initialise nutrition goals" });
+}
 
-async function updateUserInfo(req, res) {}
+async function updateUserInfo(req, res) {
+  const { name, age, weight, height } = req.body;
+  const sessionId = req.cookies.sessionId;
+  const user = await getCurrentUser(sessionId);
+  if (user.length > 0) {
+    const query = "UPDATE user_info SET name = $1, age = $2, weight = $3, height = $4 WHERE user_id = $5";
+    await client.query(query, [name, age, weight, height, user[0].id]);
+    return res.json({ response: "Successfully updated user info." });
+  }
+  return res.json({ error: "Login to update user info" });
+}
 
 async function getUserPerformance(req, res) {}
 
