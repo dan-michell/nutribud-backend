@@ -6,6 +6,9 @@ const bcrypt = require("bcrypt");
 const crypto = require("crypto");
 const { Client } = require("pg");
 
+const baseFoodParserApiUrl = "https://api.edamam.com/api/food-database/v2/parser?app_id=45463206&app_key=1fa94f20926c60638eb14a7abca872b3";
+const baseFoodNutrientsApiUrl = "https://api.edamam.com/api/food-database/v2/nutrients?app_id=45463206&app_key=1fa94f20926c60638eb14a7abca872b3";
+
 const app = express();
 const PORT = process.env.PORT || 8080;
 const connectionString = "postgres://sqlokxrl:tU6XSVGra7oaORqUxVYznMiTNUnwlxdt@tyke.db.elephantsql.com/sqlokxrl";
@@ -88,7 +91,14 @@ async function getLoggedInUser(req, res) {
   }
 }
 
-async function handleItemSearchText(req, res) {}
+async function handleItemSearchText(req, res) {
+  const { item } = req.query;
+  const parsedResponse = await fetch(`${baseFoodParserApiUrl}&ingr=${item}&nutrition-type=cooking`);
+  const parsedData = await parsedResponse.json();
+  const formattedParsedData = formatParsedData(parsedData);
+
+  return formattedParsedData.length > 0 ? res.json({ response: formattedParsedData }) : res.json({ error: `${item} not found` });
+}
 
 async function handleItemSearchBarcode(req, res) {
   const { barcode } = req.query;
@@ -188,20 +198,58 @@ async function createSessionId(userId) {
 }
 
 async function getCurrentUser(sessionId) {
-  const query =
-    "SELECT * FROM users JOIN sessions ON users.id = sessions.user_id WHERE sessions.created_at < NOW() + INTERVAL '7 DAYS' AND sessions.uuid = $1";
+  const query = "SELECT * FROM users JOIN sessions ON users.id = sessions.user_id WHERE sessions.created_at < NOW() + INTERVAL '7 DAYS' AND sessions.uuid = $1";
   const user = await client.query(query, [sessionId]);
   return user.rows;
 }
 
-async function addToUserHistory(itemInfo, amount, userInfo) {
-  const trackedItemId = await getTrackedItemId(itemInfo);
-  const query = "INSERT INTO user_history (item_id, user_id, serving_size_g) VALUES ($1, $2, $3)";
-  await client.query(query, [trackedItemId, userInfo.id, amount]);
+function formatParsedData(parsedData) {
+  const formattedData = [];
+  const nutrientLabels = {
+    ENERC_KCAL: "Calories",
+    PROCNT: "Protein",
+    FAT: "Total lipid (fat)",
+    CHOCDF: "Carbohydrate, by difference",
+    FIBTG: "Fiber, total dietary",
+  };
+  for (const item of parsedData["hints"]) {
+    const rawNutrients = item["food"]["nutrients"];
+    const foodId = item["food"]["foodId"];
+    const name = item["food"]["label"];
+    const nutriments = {};
+    const image = item["food"]["image"];
+    for (const nutrient of Object.keys(rawNutrients)) {
+      const nutrienLabel = nutrientLabels[nutrient];
+      nutriments[nutrienLabel] = rawNutrients[nutrient];
+    }
+    formattedData.push({ name, nutriments, image, foodId });
+  }
+  return formattedData;
+}
+function getBodyInfoNutrientFetch(foodId, quantity) {
+  const measure = "http://www.edamam.com/ontologies/edamam.owl#Measure_gram";
+  const body = { ingredients: [{ quantity, measureURI: measure, foodId }] };
+  return JSON.stringify(body);
 }
 
-async function getTrackedItemId(itemInfo) {
-  const query = "SELECT * FROM tracked_items WHERE item_info = $1";
-  const trackedItem = await client.query(query, [itemInfo]);
-  return trackedItem.rows[0].id;
+async function getNutrientData(body) {
+  const nutrientsResponse = await fetch(`${baseFoodNutrientsApiUrl}`, { method: "POST", headers: { "Content-Type": "application/json" }, body });
+  const nutrientData = await nutrientsResponse.json();
+
+  return nutrientData;
+}
+
+function getFormattedNutrientsData(nutrientInfo) {
+  const name = nutrientInfo["ingredients"][0]["parsed"][0]["food"];
+  const calories = nutrientInfo["calories"];
+  const nutriments = {};
+  const totalNutrients = nutrientInfo["totalNutrients"];
+  for (const nutrient of Object.keys(totalNutrients)) {
+    const nutrientName = totalNutrients[nutrient]["label"];
+    const nutrientQuantity = totalNutrients[nutrient]["quantity"];
+    nutriments[nutrientName] = nutrientQuantity;
+  }
+  const formattedData = { name, calories, nutriments };
+
+  return formattedData;
 }
