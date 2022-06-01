@@ -168,7 +168,7 @@ async function getCurrentUser(sessionId) {
 }
 
 async function addToUserHistory(itemInfo, amount, userInfo) {
-  const trackedItemId = getTrackedItemId(itemInfo);
+  const trackedItemId = await getTrackedItemId(itemInfo);
   const query = "INSERT INTO user_history (item_id, user_id, serving_size_g) VALUES ($1, $2, $3)";
   await client.query(query, [trackedItemId, userInfo.id, amount]);
 }
