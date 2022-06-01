@@ -221,7 +221,7 @@ async function getTrackedItemId(itemInfo) {
 function formatParsedData(parsedData) {
   const formattedData = [];
   const nutrientLabels = {
-    ENERC_KCAL: "Calories",
+    ENERC_KCAL: "Energy",
     PROCNT: "Protein",
     FAT: "Total lipid (fat)",
     CHOCDF: "Carbohydrate, by difference",
