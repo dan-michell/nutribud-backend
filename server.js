@@ -194,24 +194,24 @@ async function getUserInfo(req, res) {
 }
 
 async function handleUserInfoAddition(req, res) {
-  const { name, age, weight, height } = req.body;
+  const { name, age, weight, height, sex } = req.body;
   const sessionId = req.cookies.sessionId;
   const user = await getCurrentUser(sessionId);
   if (user.length > 0) {
-    const query = "INSERT INTO user_info (user_id, name, age, weight, height) VALUES ($1, $2, $3, $4, $5)";
-    await client.query(query, [user[0].id, name, age, weight, height]);
+    const query = "INSERT INTO user_info (user_id, name, age, weight, height, sex) VALUES ($1, $2, $3, $4, $5, $6)";
+    await client.query(query, [user[0].id, name, age, weight, height, sex]);
     return res.json({ response: "Successfully added to user info." });
   }
   return res.json({ error: "Login to initialise nutrition goals" });
 }
 
 async function updateUserInfo(req, res) {
-  const { name, age, weight, height } = req.body;
+  const { age, weight, height } = req.body;
   const sessionId = req.cookies.sessionId;
   const user = await getCurrentUser(sessionId);
   if (user.length > 0) {
-    const query = "UPDATE user_info SET name = $1, age = $2, weight = $3, height = $4 WHERE user_id = $5";
-    await client.query(query, [name, age, weight, height, user[0].id]);
+    const query = "UPDATE user_info SET age = $1, weight = $2, height = $3 WHERE user_id = $4";
+    await client.query(query, [age, weight, height, user[0].id]);
     return res.json({ response: "Successfully updated user info." });
   }
   return res.json({ error: "Login to update user info" });
