@@ -332,19 +332,13 @@ async function handleGoalAddition(userId) {
 }
 
 async function normaliseItemInfo(itemInfo) {
-  const normalisedItemInfo = {
-    name: "",
-    calories: "",
-    protein: "",
-    carbs: "",
-    fats: "",
-    sugar: "",
-    salt: "",
-    fiber: "",
-  };
+  const normalisedItemInfo = {};
   if (Object.keys(itemInfo).includes("foodId")) {
     normalisedItemInfo = normaliseTextData(itemInfo);
+  } else {
+    normalisedItemInfo = normaliseBarcodeData(itemInfo);
   }
+  return normalisedItemInfo;
 }
 
 function normaliseTextData(itemInfo) {
@@ -384,5 +378,21 @@ function normaliseTextData(itemInfo) {
   normalisedItemInfo.vitaminK = nutriments["Vitamin K (phylloquinone)"];
   normalisedItemInfo.water = nutriments["Water"];
   normalisedItemInfo.zinc = nutriments["Zinc, Zn"];
+  return normalisedItemInfo;
+}
+
+function normaliseBarcodeData(itemInfo) {
+  const normalisedItemInfo = {};
+  const nutriments = itemInfo.nutriments;
+  normalisedItemInfo.name = itemInfo.name;
+  normalisedItemInfo.calories = nutriments["energy_100g"];
+  normalisedItemInfo.protein = nutriments["proteins_100g"];
+  normalisedItemInfo.carbs = nutriments["carbohydrates_100g"];
+  normalisedItemInfo.fats = nutriments["fat_100g"];
+  normalisedItemInfo.sugar = nutriments["sugars_100g"];
+  normalisedItemInfo.salt = nutriments["sodium_100g"];
+  normalisedItemInfo.fiber = nutriments["fiber_100g"];
+  normalisedItemInfo.fatSaturated = nutriments["saturated-fat_100g"];
+  normalisedItemInfo.novaGroup = nutriments["nova-group_100g"];
   return normalisedItemInfo;
 }
