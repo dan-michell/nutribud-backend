@@ -122,15 +122,16 @@ async function handleItemSearchBarcode(req, res) {
 
 async function handleTrackItem(req, res) {
   let { itemInfo, amount } = req.body;
+  const sessionId = req.cookies.sessionId;
+  const user = await getCurrentUser(sessionId);
   if (Object.keys(itemInfo).includes("foodId")) {
     itemInfo = await getFullItemInfo(itemInfo);
   }
-  const sessionId = req.cookies.sessionId;
-  const user = await getCurrentUser(sessionId);
+  const normalisedItemInfo = normaliseItemInfo(itemInfo);
   if (user.length > 0) {
     const trackedItemsQuery = "INSERT INTO tracked_items (item_info) VALUES ($1)";
-    await client.query(trackedItemsQuery, [itemInfo]);
-    await addToUserHistory(itemInfo, amount, user[0]);
+    await client.query(trackedItemsQuery, [normalisedItemInfo]);
+    await addToUserHistory(normalisedItemInfo, amount, user[0]);
     return res.json({ response: "Item track success!" });
   }
   return res.json({ error: "Need to be logged in to track items." });
@@ -334,4 +335,27 @@ async function getNewUserId() {
 async function handleGoalAddition(userId) {
   const query = "INSERT INTO user_goals (user_id) VALUES ($1)";
   await client.query(query, [userId]);
+}
+
+async function normaliseItemInfo(itemInfo) {
+  const normalisedItemInfo = {
+    name: "",
+    calories: "",
+    protein: "",
+    carbs: "",
+    fats: "",
+    sugar: "",
+    salt: "",
+    fiber: "",
+  };
+  if (Object.keys(itemInfo).includes("foodId")) {
+    normalisedItemInfo.name = itemInfo.name;
+    normalisedItemInfo.calories = itemInfo.nutriments.Energy;
+    normalisedItemInfo.protein = itemInfo.nutriments.Protein;
+    normalisedItemInfo.carbs = itemInfo.nutriments["Carbohydrate, by difference"];
+    normalisedItemInfo.fats = itemInfo.nutriments["Total lipid (fat)"];
+    normalisedItemInfo.sugar = itemInfo.nutriments["Sugars, total"];
+    normalisedItemInfo.salt = itemInfo.nutriments["Sodium, Na"];
+    normalisedItemInfo.fiber = itemInfo.nutriments["Fiber, total dietary"];
+  }
 }
