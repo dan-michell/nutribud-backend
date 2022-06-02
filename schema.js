@@ -24,6 +24,7 @@ async function populateDb() {
   age INTEGER,
   weight INTEGER,
   height INTEGER,
+  sex, TEXT,
   FOREIGN KEY (user_id) REFERENCES users(id)
   )`);
 

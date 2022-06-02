@@ -194,12 +194,12 @@ async function getUserInfo(req, res) {
 }
 
 async function handleUserInfoAddition(req, res) {
-  const { name, age, weight, height, sex } = req.body;
+  const { name, age, weight, height, gender } = req.body;
   const sessionId = req.cookies.sessionId;
   const user = await getCurrentUser(sessionId);
   if (user.length > 0) {
     const query = "INSERT INTO user_info (user_id, name, age, weight, height, sex) VALUES ($1, $2, $3, $4, $5, $6)";
-    await client.query(query, [user[0].id, name, age, weight, height, sex]);
+    await client.query(query, [user[0].id, name, age, weight, height, gender]);
     return res.json({ response: "Successfully added to user info." });
   }
   return res.json({ error: "Login to initialise nutrition goals" });
