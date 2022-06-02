@@ -36,7 +36,6 @@ app.get("/search-barcode", handleItemSearchBarcode);
 app.post("/tracking", handleTrackItem);
 app.get("/tracking", getUserTrackedItems);
 app.get("/goals", getUserGoals);
-app.post("/goals", handleGoalAddition);
 app.patch("/goals", updateUserGoals);
 app.get("/user-info", getUserInfo);
 app.post("/user-info", handleUserInfoAddition);
@@ -78,6 +77,8 @@ async function handleRegistration(req, res) {
     const hashedPassword = await hashPassword(password, salt);
     const query = "INSERT INTO users (username, hashed_password, salt) VALUES ( $1, $2, $3)";
     await client.query(query, [username, hashedPassword, salt]);
+    const newUserId = await getNewUserId();
+    await handleGoalAddition(newUserId);
     return res.json({ response: "Successful registration" });
   }
   return res.status(400).json({ error: "Invalid credentials" });
@@ -156,17 +157,6 @@ async function getUserGoals(req, res) {
     return res.json({ response: userGoals });
   }
   return res.json({ error: "Unable to fetch goals." });
-}
-
-async function handleGoalAddition(req, res) {
-  const sessionId = req.cookies.sessionId;
-  const user = await getCurrentUser(sessionId);
-  if (user.length > 0) {
-    const query = "INSERT INTO user_goals (user_id) VALUES ($1)";
-    await client.query(query, [user[0].id]);
-    return res.json({ response: "Successfully added default nutrition goals." });
-  }
-  return res.json({ error: "Login to initialise nutrition goals" });
 }
 
 async function updateUserGoals(req, res) {
@@ -333,4 +323,15 @@ async function getFullItemInfo(itemInfo) {
   const formattedNutriments = getFormattedNutrientsData(nutrientData);
   itemInfo["nutriments"] = formattedNutriments;
   return itemInfo;
+}
+
+async function getNewUserId() {
+  const query = "SELECT MAX(id) FROM users";
+  const newUser = await client.query(query);
+  return newUser.rows[0].max;
+}
+
+async function handleGoalAddition(userId) {
+  const query = "INSERT INTO user_goals (user_id) VALUES ($1)";
+  await client.query(query, [userId]);
 }
