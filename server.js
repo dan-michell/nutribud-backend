@@ -332,7 +332,6 @@ async function handleGoalAddition(userId) {
 }
 
 async function normaliseItemInfo(itemInfo) {
-  const nutriments = itemInfo.nutriments;
   const normalisedItemInfo = {
     name: "",
     calories: "",
@@ -350,6 +349,7 @@ async function normaliseItemInfo(itemInfo) {
 
 function normaliseTextData(itemInfo) {
   const normalisedItemInfo = {};
+  const nutriments = itemInfo.nutriments;
   normalisedItemInfo.name = itemInfo.name;
   normalisedItemInfo.calories = nutriments.Energy;
   normalisedItemInfo.protein = nutriments.Protein;
