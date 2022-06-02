@@ -377,7 +377,7 @@ async function handleGoalAddition(userId) {
 }
 
 async function normaliseItemInfo(itemInfo) {
-  const normalisedItemInfo = {};
+  let normalisedItemInfo = {};
   if (Object.keys(itemInfo).includes("foodId")) {
     normalisedItemInfo = normaliseTextData(itemInfo);
   } else {
