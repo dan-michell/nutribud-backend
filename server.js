@@ -6,10 +6,8 @@ const bcrypt = require("bcrypt");
 const crypto = require("crypto");
 const { Client } = require("pg");
 
-const baseFoodParserApiUrl =
-  "https://api.edamam.com/api/food-database/v2/parser?app_id=45463206&app_key=1fa94f20926c60638eb14a7abca872b3";
-const baseFoodNutrientsApiUrl =
-  "https://api.edamam.com/api/food-database/v2/nutrients?app_id=45463206&app_key=1fa94f20926c60638eb14a7abca872b3";
+const baseFoodParserApiUrl = "https://api.edamam.com/api/food-database/v2/parser?app_id=45463206&app_key=1fa94f20926c60638eb14a7abca872b3";
+const baseFoodNutrientsApiUrl = "https://api.edamam.com/api/food-database/v2/nutrients?app_id=45463206&app_key=1fa94f20926c60638eb14a7abca872b3";
 
 const app = express();
 const PORT = process.env.PORT || 8080;
@@ -100,9 +98,7 @@ async function handleItemSearchText(req, res) {
   const parsedResponse = await fetch(`${baseFoodParserApiUrl}&ingr=${item}&nutrition-type=cooking`);
   const parsedData = await parsedResponse.json();
   const formattedParsedData = formatParsedData(parsedData);
-  return formattedParsedData.length > 0
-    ? res.json({ response: formattedParsedData })
-    : res.json({ error: `${item} not found` }).status(400);
+  return formattedParsedData.length > 0 ? res.json({ response: formattedParsedData }) : res.json({ error: `${item} not found` }).status(400);
 }
 
 async function handleItemSearchBarcode(req, res) {
@@ -122,15 +118,16 @@ async function handleItemSearchBarcode(req, res) {
 
 async function handleTrackItem(req, res) {
   let { itemInfo, amount } = req.body;
+  const sessionId = req.cookies.sessionId;
+  const user = await getCurrentUser(sessionId);
   if (Object.keys(itemInfo).includes("foodId")) {
     itemInfo = await getFullItemInfo(itemInfo);
   }
-  const sessionId = req.cookies.sessionId;
-  const user = await getCurrentUser(sessionId);
+  const normalisedItemInfo = normaliseItemInfo(itemInfo);
   if (user.length > 0) {
     const trackedItemsQuery = "INSERT INTO tracked_items (item_info) VALUES ($1)";
-    await client.query(trackedItemsQuery, [itemInfo]);
-    await addToUserHistory(itemInfo, amount, user[0]);
+    await client.query(trackedItemsQuery, [normalisedItemInfo]);
+    await addToUserHistory(normalisedItemInfo, amount, user[0]);
     return res.json({ response: "Item track success!" });
   }
   return res.json({ error: "Need to be logged in to track items." });
@@ -164,8 +161,7 @@ async function updateUserGoals(req, res) {
   const sessionId = req.cookies.sessionId;
   const user = await getCurrentUser(sessionId);
   if (user.length > 0) {
-    const query =
-      "UPDATE user_goals SET calories = $1, protein = $2, carbs = $3, fats = $4, sugar = $5, salt = $6, fiber = $7 WHERE user_id = $8";
+    const query = "UPDATE user_goals SET calories = $1, protein = $2, carbs = $3, fats = $4, sugar = $5, salt = $6, fiber = $7 WHERE user_id = $8";
     await client.query(query, [calories, protein, carbs, fats, sugar, salt, fiber, user[0].id]);
     return res.json({ response: "Successfully updated nutrition goals." });
   }
@@ -245,8 +241,7 @@ async function createSessionId(userId) {
 }
 
 async function getCurrentUser(sessionId) {
-  const query =
-    "SELECT * FROM users JOIN sessions ON users.id = sessions.user_id WHERE sessions.created_at < NOW() + INTERVAL '7 DAYS' AND sessions.uuid = $1";
+  const query = "SELECT * FROM users JOIN sessions ON users.id = sessions.user_id WHERE sessions.created_at < NOW() + INTERVAL '7 DAYS' AND sessions.uuid = $1";
   const user = await client.query(query, [sessionId]);
   return user.rows;
 }
@@ -334,4 +329,70 @@ async function getNewUserId() {
 async function handleGoalAddition(userId) {
   const query = "INSERT INTO user_goals (user_id) VALUES ($1)";
   await client.query(query, [userId]);
+}
+
+async function normaliseItemInfo(itemInfo) {
+  const normalisedItemInfo = {};
+  if (Object.keys(itemInfo).includes("foodId")) {
+    normalisedItemInfo = normaliseTextData(itemInfo);
+  } else {
+    normalisedItemInfo = normaliseBarcodeData(itemInfo);
+  }
+  return normalisedItemInfo;
+}
+
+function normaliseTextData(itemInfo) {
+  const normalisedItemInfo = {};
+  const nutriments = itemInfo.nutriments;
+  normalisedItemInfo.name = itemInfo.name;
+  normalisedItemInfo.calories = nutriments.Energy;
+  normalisedItemInfo.protein = nutriments.Protein;
+  normalisedItemInfo.carbs = nutriments["Carbohydrate, by difference"];
+  normalisedItemInfo.fats = nutriments["Total lipid (fat)"];
+  normalisedItemInfo.sugar = nutriments["Sugars, total"];
+  normalisedItemInfo.salt = nutriments["Sodium, Na"];
+  normalisedItemInfo.fiber = nutriments["Fiber, total dietary"];
+  normalisedItemInfo.addedSugar = nutriments["Added sugar"];
+  normalisedItemInfo.calcium = nutriments["Calcium, Ca"];
+  normalisedItemInfo.fatMonounsaturated = nutriments["Fatty acids, total monounsaturated"];
+  normalisedItemInfo.fatPolyunsaturated = nutriments["Fatty acids, total polyunsaturated"];
+  normalisedItemInfo.fatSaturated = nutriments["Fatty acids, total saturated"];
+  normalisedItemInfo.fatTrans = nutriments["Fatty acids, total trans"];
+  normalisedItemInfo.folateDfe = nutriments["Folate, DFE"];
+  normalisedItemInfo.folateFood = nutriments["Folate, food"];
+  normalisedItemInfo.folicAcid = nutriments["Folic acid"];
+  normalisedItemInfo.iron = nutriments["Iron, Fe"];
+  normalisedItemInfo.magnesium = nutriments["Magnesium"];
+  normalisedItemInfo.niacin = nutriments["Niacin"];
+  normalisedItemInfo.phosphorus = nutriments["Phosphorus, P"];
+  normalisedItemInfo.potassium = nutriments["Potassium, K"];
+  normalisedItemInfo.riboflavin = nutriments["Riboflavin"];
+  normalisedItemInfo.sugarAlcohols = nutriments["Sugar alcohols"];
+  normalisedItemInfo.thiamin = nutriments["Thiamin"];
+  normalisedItemInfo.vitaminA = nutriments["Vitamin A, RAE"];
+  normalisedItemInfo.vitaminB12 = nutriments["Vitamin B-12"];
+  normalisedItemInfo.vitaminB6 = nutriments["Vitamin B-6"];
+  normalisedItemInfo.vitaminC = nutriments["Vitamin C, total ascorbic acid"];
+  normalisedItemInfo.vitaminD = nutriments["Vitamin D (D2 + D3)"];
+  normalisedItemInfo.vitaminE = nutriments["Vitamin E (alpha-tocopherol)"];
+  normalisedItemInfo.vitaminK = nutriments["Vitamin K (phylloquinone)"];
+  normalisedItemInfo.water = nutriments["Water"];
+  normalisedItemInfo.zinc = nutriments["Zinc, Zn"];
+  return normalisedItemInfo;
+}
+
+function normaliseBarcodeData(itemInfo) {
+  const normalisedItemInfo = {};
+  const nutriments = itemInfo.nutriments;
+  normalisedItemInfo.name = itemInfo.name;
+  normalisedItemInfo.calories = nutriments["energy_100g"];
+  normalisedItemInfo.protein = nutriments["proteins_100g"];
+  normalisedItemInfo.carbs = nutriments["carbohydrates_100g"];
+  normalisedItemInfo.fats = nutriments["fat_100g"];
+  normalisedItemInfo.sugar = nutriments["sugars_100g"];
+  normalisedItemInfo.salt = nutriments["sodium_100g"];
+  normalisedItemInfo.fiber = nutriments["fiber_100g"];
+  normalisedItemInfo.fatSaturated = nutriments["saturated-fat_100g"];
+  normalisedItemInfo.novaGroup = nutriments["nova-group_100g"];
+  return normalisedItemInfo;
 }
