@@ -159,7 +159,7 @@ async function getUserTrackedItems(req, res) {
   const sessionId = req.cookies.sessionId;
   const user = await getCurrentUser(sessionId);
   const query =
-    "SELECT item_info, serving_size_g FROM user_history JOIN tracked_items ON user_history.item_id = tracked_items.id WHERE user_history.created_at = NOW() AND user_history.user_id = $1";
+    "SELECT item_info, serving_size_g FROM user_history JOIN tracked_items ON user_history.item_id = tracked_items.id WHERE user_history.created_at = current_date AND user_history.user_id = $1";
   const todayTrackedItems = await client.query(query, [user[0].id]);
   if (todayTrackedItems.rows.length > 0) {
     return res.json({ response: todayTrackedItems.rows });
