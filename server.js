@@ -142,15 +142,19 @@ async function handleTrackItem(req, res) {
 }
 
 async function getUserTrackedItems(req, res) {
+  const { date } = req.query;
   const sessionId = req.cookies.sessionId;
   const user = await getCurrentUser(sessionId);
-  const query =
-    "SELECT item_info, serving_size_g FROM user_history JOIN tracked_items ON user_history.item_id = tracked_items.id WHERE user_history.created_at = CURRENT_DATE AND user_history.user_id = $1";
-  const todayTrackedItems = await client.query(query, [user[0].id]);
-  if (todayTrackedItems.rows.length > 0) {
-    return res.json({ response: todayTrackedItems.rows });
+  if (user.length > 0) {
+    const query =
+      "SELECT item_info, serving_size_g FROM user_history JOIN tracked_items ON user_history.item_id = tracked_items.id WHERE user_history.created_at = $1 AND user_history.user_id = $2";
+    const todayTrackedItems = await client.query(query, [date, user[0].id]);
+    if (todayTrackedItems.rows.length > 0) {
+      return res.json({ response: todayTrackedItems.rows });
+    }
+    return res.json({ error: "User has not tracked any items today." });
   }
-  return res.json({ error: "User has not tracked any items today." });
+  return res.json({ error: "User is not logged in" });
 }
 
 async function getUserGoals(req, res) {
