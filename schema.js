@@ -50,6 +50,7 @@ async function populateDb() {
   user_id INTEGER,
   serving_size_g INTEGER NOT NULL,
   created_at DATE DEFAULT NOW() NOT NULL,
+  time DATE DEFAULT LOCALTIME() NOT NULL,
   FOREIGN KEY (item_id) REFERENCES tracked_items(id),
   FOREIGN KEY (user_id) REFERENCES users(id)
   )`);
@@ -57,7 +58,7 @@ async function populateDb() {
   await client.query(`CREATE TABLE user_perf (
   user_id INTEGER,
   perf_score INTEGER DEFAULT 0 NOT NULL,
-  created_at DATE DEFAULT NOW() NOT NULL,
+  date DATE DEFAULT NOW() NOT NULL,
   FOREIGN KEY (user_id) REFERENCES users(id)
   )`);
 
