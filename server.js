@@ -228,15 +228,23 @@ async function handleUserPerformance(req, res) {
   const sessionId = req.cookies.sessionId;
   const user = await getCurrentUser(sessionId);
   if (user.length === 0) return res.json({ error: "Login to update performance info" });
-  if (!score || !date) return res.json({ error: "Missing score or date" });
-  let query = "SELECT perf_score FROM user_perf WHERE user_id = $1 AND date=$2";
+  if (!score) return res.json({ error: "Missing score" });
+  let sql_date = "";
+  date ? (sql_date = "$2") : (sql_date = "NOW()");
+  let query = `SELECT perf_score FROM user_perf WHERE user_id = $1 AND date=${sql_date}`;
   const perf_score = (await client.query(query, [user[0].id, date])).rows;
   if (perf_score.length === 0) {
-    query = "INSERT INTO user_perf (user_id, perf_score, date) VALUES ($1,$2,$3)";
+    let columns = "(user_id, perf_score, date)";
+    let values = "($1,$2,$3)";
+    if (!date) {
+      columns = "(user_id, perf_score)";
+      values = "($1,$2)";
+    }
+    query = `INSERT INTO user_perf ${columns} VALUES ${values}`;
     await client.query(query, [user[0].id, score, date]);
   } else {
-    query = "UPDATE user_perf SET perf_score = $1 WHERE user_id = $2 AND date=$3";
-    await client.query(query, [score, user[0].id, date]);
+    query = `UPDATE user_perf SET perf_score = $1 WHERE date=${sql_date} AND  user_id = $3`;
+    await client.query(query, [score, date, user[0].id]);
   }
   return res.json({ response: "Successfully updated performance info." });
 }
