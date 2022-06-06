@@ -6,10 +6,8 @@ const bcrypt = require("bcrypt");
 const crypto = require("crypto");
 const { Client } = require("pg");
 
-const baseFoodParserApiUrl =
-  "https://api.edamam.com/api/food-database/v2/parser?app_id=45463206&app_key=1fa94f20926c60638eb14a7abca872b3";
-const baseFoodNutrientsApiUrl =
-  "https://api.edamam.com/api/food-database/v2/nutrients?app_id=45463206&app_key=1fa94f20926c60638eb14a7abca872b3";
+const baseFoodParserApiUrl = "https://api.edamam.com/api/food-database/v2/parser?app_id=45463206&app_key=1fa94f20926c60638eb14a7abca872b3";
+const baseFoodNutrientsApiUrl = "https://api.edamam.com/api/food-database/v2/nutrients?app_id=45463206&app_key=1fa94f20926c60638eb14a7abca872b3";
 
 const app = express();
 const PORT = process.env.PORT || 8080;
@@ -43,6 +41,7 @@ app.get("/user-info", getUserInfo);
 app.post("/user-info", handleUserInfoAddition);
 app.patch("/user-info", updateUserInfo);
 app.get("/performance-history", getUserPerformance);
+app.post("/performance-history", handleUserPerformance);
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}`);
 });
@@ -102,9 +101,7 @@ async function handleItemSearchText(req, res) {
   const parsedResponse = await fetch(`${baseFoodParserApiUrl}&ingr=${item}&nutrition-type=cooking`);
   const parsedData = await parsedResponse.json();
   const formattedParsedData = formatParsedData(parsedData);
-  return formattedParsedData.length > 0
-    ? res.json({ response: formattedParsedData })
-    : res.json({ error: `${item} not found` }).status(400);
+  return formattedParsedData.length > 0 ? res.json({ response: formattedParsedData }) : res.json({ error: `${item} not found` }).status(400);
 }
 
 async function handleItemSearchBarcode(req, res) {
@@ -173,8 +170,7 @@ async function updateUserGoals(req, res) {
   const sessionId = req.cookies.sessionId;
   const user = await getCurrentUser(sessionId);
   if (user.length > 0) {
-    const query =
-      "UPDATE user_goals SET calories = $1, protein = $2, carbs = $3, fats = $4, sugar = $5, salt = $6, fiber = $7 WHERE user_id = $8";
+    const query = "UPDATE user_goals SET calories = $1, protein = $2, carbs = $3, fats = $4, sugar = $5, salt = $6, fiber = $7 WHERE user_id = $8";
     await client.query(query, [calories, protein, carbs, fats, sugar, salt, fiber, user[0].id]);
     return res.json({ response: "Successfully updated nutrition goals." });
   }
@@ -216,7 +212,34 @@ async function updateUserInfo(req, res) {
   return res.json({ error: "Login to update user info" });
 }
 
-async function getUserPerformance(req, res) {}
+async function getUserPerformance(req, res) {
+  const { date } = req.query;
+  const sessionId = req.cookies.sessionId;
+  const user = await getCurrentUser(sessionId);
+  if (user.length === 0) return res.json({ error: "Login to get performance info" });
+  if (!date) return res.json({ error: "Missing date" });
+  let query = "SELECT perf_score FROM user_perf WHERE user_id = $1 AND date=$2";
+  const perf_score = (await client.query(query, [user[0].id, date])).rows;
+  return res.json({ response: perf_score[0] });
+}
+
+async function handleUserPerformance(req, res) {
+  const { score, date } = req.body;
+  const sessionId = req.cookies.sessionId;
+  const user = await getCurrentUser(sessionId);
+  if (user.length === 0) return res.json({ error: "Login to update performance info" });
+  if (!score || !date) return res.json({ error: "Missing score or date" });
+  let query = "SELECT perf_score FROM user_perf WHERE user_id = $1 AND date=$2";
+  const perf_score = (await client.query(query, [user[0].id, date])).rows;
+  if (perf_score.length === 0) {
+    query = "INSERT INTO user_perf (user_id, perf_score, date) VALUES ($1,$2,$3)";
+    await client.query(query, [user[0].id, score, date]);
+  } else {
+    query = "UPDATE user_perf SET perf_score = $1 WHERE user_id = $2 AND date=$3";
+    await client.query(query, [score, user[0].id, date]);
+  }
+  return res.json({ response: "Successfully updated performance info." });
+}
 
 async function loginAuthentication(username, password) {
   const query = "SELECT * FROM users WHERE username = $1";
@@ -254,8 +277,7 @@ async function createSessionId(userId) {
 }
 
 async function getCurrentUser(sessionId) {
-  const query =
-    "SELECT * FROM users JOIN sessions ON users.id = sessions.user_id WHERE sessions.created_at < NOW() + INTERVAL '7 DAYS' AND sessions.uuid = $1";
+  const query = "SELECT * FROM users JOIN sessions ON users.id = sessions.user_id WHERE sessions.created_at < NOW() + INTERVAL '7 DAYS' AND sessions.uuid = $1";
   const user = await client.query(query, [sessionId]);
   return user.rows;
 }
@@ -399,9 +421,7 @@ function normaliseBarcodeData(itemInfo) {
   const normalisedItemInfo = {};
   const nutriments = itemInfo.nutriments;
   normalisedItemInfo.name = itemInfo.name;
-  normalisedItemInfo.calories = nutriments["energy-kcal_100g"]
-    ? nutriments["energy-kcal_100g"]
-    : nutriments["energy_100g"];
+  normalisedItemInfo.calories = nutriments["energy-kcal_100g"] ? nutriments["energy-kcal_100g"] : nutriments["energy_100g"];
   normalisedItemInfo.protein = nutriments["proteins_100g"];
   normalisedItemInfo.carbs = nutriments["carbohydrates_100g"];
   normalisedItemInfo.fats = nutriments["fat_100g"];
@@ -410,8 +430,6 @@ function normaliseBarcodeData(itemInfo) {
   normalisedItemInfo.fiber = nutriments["fiber_100g"];
   normalisedItemInfo.fatSaturated = nutriments["saturated-fat_100g"];
   normalisedItemInfo.novaGroup = nutriments["nova-group_100g"];
-  normaliseItemInfo.energyUnit = nutriments["energy-kcal_unit"]
-    ? nutriments["energy-kcal_unit"]
-    : nutriments["energy_unit"];
+  normaliseItemInfo.energyUnit = nutriments["energy-kcal_unit"] ? nutriments["energy-kcal_unit"] : nutriments["energy_unit"];
   return normalisedItemInfo;
 }
