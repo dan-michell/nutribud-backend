@@ -213,13 +213,14 @@ async function updateUserInfo(req, res) {
 }
 
 async function getUserPerformance(req, res) {
-  const { date } = req.query;
+  const { date, allTime } = req.query;
   const sessionId = req.cookies.sessionId;
   const user = await getCurrentUser(sessionId);
+  if (date && allTime) return res.json({ error: "Can't have both date and allTime" });
   if (user.length === 0) return res.json({ error: "Login to get performance info" });
   let perf_score = "";
-  date ? (perf_score = await getPerformanceScore(user, date)) : (perf_score = await getPerformanceScore(user));
-  return res.json({ response: perf_score[0] });
+  perf_score = await getPerformanceScore(user, date, allTime);
+  return res.json({ response: perf_score });
 }
 
 async function handleUserPerformance(req, res) {
@@ -229,12 +230,12 @@ async function handleUserPerformance(req, res) {
   if (user.length === 0) return res.json({ error: "Login to update performance info" });
   if (!score) return res.json({ error: "Missing score" });
   let perf_score = "";
-  date ? (perf_score = await getPerformanceScore(user, date)) : (perf_score = await getPerformanceScore(user));
+  perf_score = await getPerformanceScore(user, date);
+
   if (perf_score.length === 0) {
-    date ? await insertPerformanceScore(user, score, date) : await insertPerformanceScore(user, score);
+    await insertPerformanceScore(user, score, date);
   } else {
-    console.log("updated");
-    date ? await updatePerformanceScore(user, score, date) : await updatePerformanceScore(user, score);
+    await updatePerformanceScore(user, score, date);
   }
   return res.json({ response: "Successfully updated performance info." });
 }
@@ -450,14 +451,22 @@ async function updatePerformanceScore(user, score, date) {
   await client.query(query, queryValues);
 }
 
-async function getPerformanceScore(user, date) {
-  let sql_date = "";
+async function getPerformanceScore(user, date, allTime) {
+  let query = "";
   let queryValues = [];
-
-  date ? (sql_date = "$2") : (sql_date = "CURRENT_DATE");
+  let sqlDate = "";
+  let perf_score = [];
+  date ? (sqlDate = "$2") : (sqlDate = "CURRENT_DATE");
   date ? (queryValues = [user[0].id, date]) : (queryValues = [user[0].id]);
-
-  const query = `SELECT * FROM user_perf WHERE user_id = $1 AND date = ${sql_date}`;
-  const perf_score = (await client.query(query, queryValues)).rows;
+  if (allTime) {
+    query = `SELECT * FROM user_perf WHERE user_id = $1`;
+    perf_score = (await client.query(query, queryValues)).rows;
+    const formattedPerfScore = perf_score.map((daily_score_info) => {
+      return { value: daily_score_info.perf_score, day: daily_score_info.date };
+    });
+    return formattedPerfScore;
+  }
+  query = `SELECT * FROM user_perf WHERE user_id = $1 AND date = ${sqlDate}`;
+  perf_score = (await client.query(query, queryValues)).rows;
   return perf_score;
 }
