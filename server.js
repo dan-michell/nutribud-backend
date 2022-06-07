@@ -14,16 +14,12 @@ const baseFoodNutrientsApiUrl =
 const app = express();
 const PORT = process.env.PORT || 8080;
 
-const connectionString =
-  "postgres://sqlokxrl:tU6XSVGra7oaORqUxVYznMiTNUnwlxdt@tyke.db.elephantsql.com/sqlokxrl";
+const connectionString = "postgres://sqlokxrl:tU6XSVGra7oaORqUxVYznMiTNUnwlxdt@tyke.db.elephantsql.com/sqlokxrl";
 const client = new Client(connectionString);
 client.connect();
 
 const corsOptions = {
-  origin: [
-    "http://localhost:3000",
-    "https://nutribud-frontend.sigmalabs.co.uk",
-  ],
+  origin: ["http://localhost:3000", "https://nutribud-frontend.sigmalabs.co.uk"],
   credentials: true,
 };
 
@@ -62,9 +58,7 @@ async function handleLogin(req, res) {
     res.cookie("sessionId", sessionId);
     return res.json({ response: "Login Success!" });
   }
-  return res
-    .status(400)
-    .json({ error: "Login failed, check details and try again." });
+  return res.status(400).json({ error: "Login failed, check details and try again." });
 }
 
 async function handleUserLogout(req, res) {
@@ -80,16 +74,11 @@ async function handleUserLogout(req, res) {
 
 async function handleRegistration(req, res) {
   const { username, password, passwordConfirmation } = req.body;
-  const validateCredentials = await validateRegistrationCredentials(
-    username,
-    password,
-    passwordConfirmation
-  );
+  const validateCredentials = await validateRegistrationCredentials(username, password, passwordConfirmation);
   if (validateCredentials) {
     const salt = await bcrypt.genSalt(8);
     const hashedPassword = await hashPassword(password, salt);
-    const query =
-      "INSERT INTO users (username, hashed_password, salt) VALUES ( $1, $2, $3)";
+    const query = "INSERT INTO users (username, hashed_password, salt) VALUES ( $1, $2, $3)";
     await client.query(query, [username, hashedPassword, salt]);
     const newUserId = await getNewUserId();
     await handleGoalAddition(newUserId);
@@ -111,9 +100,7 @@ async function getLoggedInUser(req, res) {
 async function handleItemSearchText(req, res) {
   const { item } = req.query;
   if (!item) return res.json({ error: "Missing item" }).status(400);
-  const parsedResponse = await fetch(
-    `${baseFoodParserApiUrl}&ingr=${item}&nutrition-type=cooking`
-  );
+  const parsedResponse = await fetch(`${baseFoodParserApiUrl}&ingr=${item}&nutrition-type=cooking`);
   const parsedData = await parsedResponse.json();
   const formattedParsedData = formatParsedData(parsedData);
   return formattedParsedData.length > 0
@@ -123,9 +110,7 @@ async function handleItemSearchText(req, res) {
 
 async function handleItemSearchBarcode(req, res) {
   const { barcode } = req.query;
-  const response = await fetch(
-    `https://world.openfoodfacts.org/api/v0/product/${barcode}.json`
-  );
+  const response = await fetch(`https://world.openfoodfacts.org/api/v0/product/${barcode}.json`);
   const foodData = await response.json();
   if (foodData.status !== 0) {
     const productImg = foodData.product.image_url;
@@ -149,8 +134,7 @@ async function handleTrackItem(req, res) {
   }
   const normalisedItemInfo = await normaliseItemInfo(itemInfo);
   if (user.length > 0) {
-    const trackedItemsQuery =
-      "INSERT INTO tracked_items (item_info) VALUES ($1)";
+    const trackedItemsQuery = "INSERT INTO tracked_items (item_info) VALUES ($1)";
     await client.query(trackedItemsQuery, [normalisedItemInfo]);
     await addToUserHistory(normalisedItemInfo, amount, user[0]);
     return res.json({ response: "Item track success!" });
@@ -192,16 +176,7 @@ async function updateUserGoals(req, res) {
   if (user.length > 0) {
     const query =
       "UPDATE user_goals SET calories = $1, protein = $2, carbs = $3, fats = $4, sugar = $5, salt = $6, fiber = $7 WHERE user_id = $8";
-    await client.query(query, [
-      calories,
-      protein,
-      carbs,
-      fats,
-      sugar,
-      salt,
-      fiber,
-      user[0].id,
-    ]);
+    await client.query(query, [calories, protein, carbs, fats, sugar, salt, fiber, user[0].id]);
     return res.json({ response: "Successfully updated nutrition goals." });
   }
   return res.json({ error: "Login to update nutrition goals" });
@@ -223,8 +198,7 @@ async function handleUserInfoAddition(req, res) {
   const sessionId = req.cookies.sessionId;
   const user = await getCurrentUser(sessionId);
   if (user.length > 0) {
-    const query =
-      "INSERT INTO user_info (user_id, name, age, weight, height, sex) VALUES ($1, $2, $3, $4, $5, $6)";
+    const query = "INSERT INTO user_info (user_id, name, age, weight, height, sex) VALUES ($1, $2, $3, $4, $5, $6)";
     await client.query(query, [user[0].id, name, age, weight, height, gender]);
     return res.json({ response: "Successfully added to user info." });
   }
@@ -236,8 +210,7 @@ async function updateUserInfo(req, res) {
   const sessionId = req.cookies.sessionId;
   const user = await getCurrentUser(sessionId);
   if (user.length > 0) {
-    const query =
-      "UPDATE user_info SET age = $1, weight = $2, height = $3 WHERE user_id = $4";
+    const query = "UPDATE user_info SET age = $1, weight = $2, height = $3 WHERE user_id = $4";
     await client.query(query, [age, weight, height, user[0].id]);
     return res.json({ response: "Successfully updated user info." });
   }
@@ -248,10 +221,8 @@ async function getUserPerformance(req, res) {
   const { date, allTime } = req.query;
   const sessionId = req.cookies.sessionId;
   const user = await getCurrentUser(sessionId);
-  if (date && allTime)
-    return res.json({ error: "Can't have both date and allTime" });
-  if (user.length === 0)
-    return res.json({ error: "Login to get performance info" });
+  if (date && allTime) return res.json({ error: "Can't have both date and allTime" });
+  if (user.length === 0) return res.json({ error: "Login to get performance info" });
   let perf_score = "";
   perf_score = await getPerformanceScore(user, date, allTime);
   return res.json({ response: perf_score });
@@ -261,8 +232,7 @@ async function handleUserPerformance(req, res) {
   const { score, date } = req.body;
   const sessionId = req.cookies.sessionId;
   const user = await getCurrentUser(sessionId);
-  if (user.length === 0)
-    return res.json({ error: "Login to update performance info" });
+  if (user.length === 0) return res.json({ error: "Login to update performance info" });
   if (!score) return res.json({ error: "Missing score" });
   const perf_score = await getPerformanceScore(user, date);
   if (perf_score.length === 0) {
@@ -287,18 +257,10 @@ async function loginAuthentication(username, password) {
   return { isValid: false };
 }
 
-async function validateRegistrationCredentials(
-  username,
-  password,
-  passwordConformation
-) {
+async function validateRegistrationCredentials(username, password, passwordConformation) {
   const query = "SELECT * FROM users WHERE username = $1";
   const duplicateUsernameCheck = await client.query(query, [username]);
-  if (
-    duplicateUsernameCheck.rowCount < 1 &&
-    password === passwordConformation &&
-    password.length > 1
-  ) {
+  if (duplicateUsernameCheck.rowCount < 1 && password === passwordConformation && password.length > 1) {
     return true;
   }
   return false;
@@ -311,8 +273,7 @@ async function hashPassword(password, salt) {
 
 async function createSessionId(userId) {
   const sessionId = crypto.randomUUID();
-  const query =
-    "INSERT INTO sessions (uuid, user_id, created_at) VALUES ($1, $2, NOW())";
+  const query = "INSERT INTO sessions (uuid, user_id, created_at) VALUES ($1, $2, NOW())";
   await client.query(query, [sessionId, userId]);
   return sessionId;
 }
@@ -326,8 +287,7 @@ async function getCurrentUser(sessionId) {
 
 async function addToUserHistory(itemInfo, amount, userInfo) {
   const trackedItemId = await getTrackedItemId(itemInfo);
-  const query =
-    "INSERT INTO user_history (item_id, user_id, serving_size_g) VALUES ($1, $2, $3)";
+  const query = "INSERT INTO user_history (item_id, user_id, serving_size_g) VALUES ($1, $2, $3)";
   await client.query(query, [trackedItemId, userInfo.id, amount]);
 }
 
@@ -433,10 +393,8 @@ function normaliseTextData(itemInfo) {
   normalisedItemInfo.fiber = nutriments["Fiber, total dietary"];
   normalisedItemInfo.addedSugar = nutriments["Added sugar"];
   normalisedItemInfo.calcium = nutriments["Calcium, Ca"];
-  normalisedItemInfo.fatMonounsaturated =
-    nutriments["Fatty acids, total monounsaturated"];
-  normalisedItemInfo.fatPolyunsaturated =
-    nutriments["Fatty acids, total polyunsaturated"];
+  normalisedItemInfo.fatMonounsaturated = nutriments["Fatty acids, total monounsaturated"];
+  normalisedItemInfo.fatPolyunsaturated = nutriments["Fatty acids, total polyunsaturated"];
   normalisedItemInfo.fatSaturated = nutriments["Fatty acids, total saturated"];
   normalisedItemInfo.fatTrans = nutriments["Fatty acids, total trans"];
   normalisedItemInfo.folateDfe = nutriments["Folate, DFE"];
@@ -487,11 +445,10 @@ async function insertPerformanceScore(user, score, date) {
   let values = "";
   let queryValues = [];
   const formattedDate = new Date().toISOString().split("T")[0];
-  date ? (values = "($1,$2,$3)") : (values = `($1, ${formattedDate}, $2)`);
-  date
-    ? (queryValues = [user[0].id, date, score])
-    : (queryValues = [user[0].id, score]);
-  const query = `INSERT INTO user_perf (user_id,  date, perf_score) VALUES ${values}`;
+  date ? (values = "($1,$2,$3)") : (values = `($1, '${formattedDate}', $2)`);
+  date ? (queryValues = [user[0].id, date, score]) : (queryValues = [user[0].id, score]);
+  const query = `INSERT INTO user_perf (user_id, date, perf_score) VALUES ${values}`;
+  console.log(query);
   await client.query(query, queryValues);
 }
 
@@ -501,10 +458,8 @@ async function updatePerformanceScore(user, score, date) {
   const formattedDate = new Date().toISOString().split("T")[0];
   date
     ? (conditional = "WHERE date = $2 AND  user_id = $3")
-    : (conditional = `WHERE date=${formattedDate} AND  user_id = $2`);
-  date
-    ? (queryValues = [score, date, user[0].id])
-    : (queryValues = [score, user[0].id]);
+    : (conditional = `WHERE date= '${formattedDate}' AND  user_id = $2`);
+  date ? (queryValues = [score, date, user[0].id]) : (queryValues = [score, user[0].id]);
   const query = `UPDATE user_perf SET perf_score = $1 ${conditional}`;
   await client.query(query, queryValues);
 }
@@ -516,7 +471,11 @@ async function getPerformanceScore(user, date, allTime) {
   let perf_score = [];
   const formattedDate = new Date().toISOString().split("T")[0];
   date ? (sqlDate = "$2") : (sqlDate = formattedDate);
-  date ? (queryValues = [user[0].id, date]) : (queryValues = [user[0].id]);
+  if (date) {
+    queryValues = [user[0].id, date];
+  } else {
+    allTime ? (queryValues = [user[0].id]) : (queryValues = [user[0].id, sqlDate]);
+  }
   if (allTime) {
     query = `SELECT * FROM user_perf WHERE user_id = $1`;
     perf_score = (await client.query(query, queryValues)).rows;
@@ -526,7 +485,6 @@ async function getPerformanceScore(user, date, allTime) {
     return formattedPerfScore;
   }
   query = `SELECT * FROM user_perf WHERE user_id = $1 AND date = $2`;
-  queryValues = [user[0].id, String(sqlDate)];
   perf_score = (await client.query(query, queryValues)).rows;
   return perf_score;
 }

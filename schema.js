@@ -58,7 +58,7 @@ async function populateDb() {
   await client.query(`CREATE TABLE user_perf (
   user_id INTEGER,
   perf_score INTEGER DEFAULT 0 NOT NULL,
-  date DATE DEFAULT NOW() NOT NULL,
+  date TEXT NOT NULL,
   FOREIGN KEY (user_id) REFERENCES users(id)
   )`);
 
