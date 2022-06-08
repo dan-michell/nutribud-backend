@@ -389,7 +389,7 @@ function normaliseTextData(itemInfo) {
   normalisedItemInfo.carbs = nutriments["Carbohydrate, by difference"];
   normalisedItemInfo.fats = nutriments["Total lipid (fat)"];
   normalisedItemInfo.sugar = nutriments["Sugars, total"];
-  normalisedItemInfo.salt = nutriments["Sodium, Na"];
+  normalisedItemInfo.salt = nutriments["Sodium, Na"] / 1000;
   normalisedItemInfo.fiber = nutriments["Fiber, total dietary"];
   normalisedItemInfo.addedSugar = nutriments["Added sugar"];
   normalisedItemInfo.calcium = nutriments["Calcium, Ca"];
@@ -448,7 +448,6 @@ async function insertPerformanceScore(user, score, date) {
   date ? (values = "($1,$2,$3)") : (values = `($1, '${formattedDate}', $2)`);
   date ? (queryValues = [user[0].id, date, score]) : (queryValues = [user[0].id, score]);
   const query = `INSERT INTO user_perf (user_id, date, perf_score) VALUES ${values}`;
-  console.log(query);
   await client.query(query, queryValues);
 }
 
