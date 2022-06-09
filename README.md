@@ -250,7 +250,7 @@ Retrieving the goals a user has set is done with a GET HTTP Method to the `/goal
 Example of a fetch request:
 
 ```
-await fetch(`${process.env.REACT_APP_API_URL}/goals`, {
+await fetch(`http://localhost:8080/goals`, {
     method: "GET",
     credentials: "include",
     headers: {"Content-Type": "application/json"},
@@ -260,6 +260,12 @@ await fetch(`${process.env.REACT_APP_API_URL}/goals`, {
 Example response:
 
 ![goals response](assets/goals.png)
+
+### /user-info
+
+The `user-info` endpoint handles user information such as weight, height, name, gender. The endpoint handles setting, retrieving and updating the information.
+
+#### Setting User Information
 
 ## Packages installed:
 
