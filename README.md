@@ -8,7 +8,7 @@ This is the backend server of the Nutribud desktop app that handles http request
 
 ## Technologies
 
-This repository uses [node](https://nodejs.org/api/) to run its files. The Node web framework [Express](https://expressjs.com/) was used to write the endpoint paths and handlers. For our database we use [PostgreSQL](https://www.postgresql.org/) to store user data online using [ElephantSQL](https://www.elephantsql.com/).
+This repository uses [node](https://nodejs.org/api/) to run its files. The Node web framework [Express](https://expressjs.com/) was used to write the endpoint paths and handlers. For our database we use [PostgreSQL](https://www.postgresql.org/) to store user data online using [ElephantSQL](https://www.elephantsql.com/). For voice and text searches we use Edamam's [Food and Grocery Database API](https://developer.edamam.com/food-database-api). For barcode searches we use [Open Food Facts API](https://openfoodfacts.github.io/api-documentation/)
 
 ## Launch
 
@@ -95,7 +95,7 @@ The body of the POST request **_must_** contain:
 Example of a fetch request:
 
 ```
-await fetch(`${process.env.REACT_APP_API_URL}/register`, {
+await fetch(`http://localhost:8080/register`, {
       method: "POST",
       credentials: "include",
       headers: {
@@ -110,6 +110,22 @@ await fetch(`${process.env.REACT_APP_API_URL}/register`, {
 ```
 
 If the username is already registered or the passwords do not match the server will respond with a 400 status code (bad request).
+
+### /search-text
+
+The `/search-text` endpoint handles requests to Edamam's [Food and Grocery Database API](https://developer.edamam.com/food-database-api) and returns nutritional information for a given item.
+
+This is done with a GET HTTP Method and the following query parameter:
+
+- item
+
+Example of a fetch request:
+
+```
+await fetch(`http://localhost:8080/search-text?item=${encodeURIComponent(bread)}`);
+```
+
+If the fetch request does no have an item query parameter the server will respond with a 400 status code (bad request).
 
 ## Packages installed:
 

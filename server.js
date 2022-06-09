@@ -7,10 +7,8 @@ const crypto = require("crypto");
 const { Client } = require("pg");
 const fetch = (...args) => import("node-fetch").then(({ default: fetch }) => fetch(...args));
 
-const baseFoodParserApiUrl =
-  "https://api.edamam.com/api/food-database/v2/parser?app_id=45463206&app_key=1fa94f20926c60638eb14a7abca872b3";
-const baseFoodNutrientsApiUrl =
-  "https://api.edamam.com/api/food-database/v2/nutrients?app_id=45463206&app_key=1fa94f20926c60638eb14a7abca872b3";
+const baseFoodParserApiUrl = "https://api.edamam.com/api/food-database/v2/parser?app_id=45463206&app_key=1fa94f20926c60638eb14a7abca872b3";
+const baseFoodNutrientsApiUrl = "https://api.edamam.com/api/food-database/v2/nutrients?app_id=45463206&app_key=1fa94f20926c60638eb14a7abca872b3";
 
 const app = express();
 const PORT = process.env.PORT || 8080;
@@ -104,9 +102,7 @@ async function handleItemSearchText(req, res) {
   const parsedResponse = await fetch(`${baseFoodParserApiUrl}&ingr=${item}&nutrition-type=cooking`);
   const parsedData = await parsedResponse.json();
   const formattedParsedData = formatParsedData(parsedData);
-  return formattedParsedData.length > 0
-    ? res.json({ response: formattedParsedData })
-    : res.json({ error: `${item} not found` }).status(400);
+  return formattedParsedData.length > 0 ? res.json({ response: formattedParsedData }) : res.json({ error: `${item} not found` });
 }
 
 async function handleItemSearchBarcode(req, res) {
@@ -175,8 +171,7 @@ async function updateUserGoals(req, res) {
   const sessionId = req.cookies.sessionId;
   const user = await getCurrentUser(sessionId);
   if (user.length > 0) {
-    const query =
-      "UPDATE user_goals SET calories = $1, protein = $2, carbs = $3, fats = $4, sugar = $5, salt = $6, fiber = $7 WHERE user_id = $8";
+    const query = "UPDATE user_goals SET calories = $1, protein = $2, carbs = $3, fats = $4, sugar = $5, salt = $6, fiber = $7 WHERE user_id = $8";
     await client.query(query, [calories, protein, carbs, fats, sugar, salt, fiber, user[0].id]);
     return res.json({ response: "Successfully updated nutrition goals." });
   }
@@ -280,8 +275,7 @@ async function createSessionId(userId) {
 }
 
 async function getCurrentUser(sessionId) {
-  const query =
-    "SELECT * FROM users JOIN sessions ON users.id = sessions.user_id WHERE sessions.created_at < NOW() + INTERVAL '7 DAYS' AND sessions.uuid = $1";
+  const query = "SELECT * FROM users JOIN sessions ON users.id = sessions.user_id WHERE sessions.created_at < NOW() + INTERVAL '7 DAYS' AND sessions.uuid = $1";
   const user = await client.query(query, [sessionId]);
   return user.rows;
 }
@@ -425,9 +419,7 @@ function normaliseBarcodeData(itemInfo) {
   const normalisedItemInfo = {};
   const nutriments = itemInfo.nutriments;
   normalisedItemInfo.name = itemInfo.name;
-  normalisedItemInfo.calories = nutriments["energy-kcal_100g"]
-    ? nutriments["energy-kcal_100g"]
-    : nutriments["energy_100g"];
+  normalisedItemInfo.calories = nutriments["energy-kcal_100g"] ? nutriments["energy-kcal_100g"] : nutriments["energy_100g"];
   normalisedItemInfo.protein = nutriments["proteins_100g"];
   normalisedItemInfo.carbs = nutriments["carbohydrates_100g"];
   normalisedItemInfo.fats = nutriments["fat_100g"];
@@ -436,9 +428,7 @@ function normaliseBarcodeData(itemInfo) {
   normalisedItemInfo.fiber = nutriments["fiber_100g"];
   normalisedItemInfo.fatSaturated = nutriments["saturated-fat_100g"];
   normalisedItemInfo.novaGroup = nutriments["nova-group_100g"];
-  normaliseItemInfo.energyUnit = nutriments["energy-kcal_unit"]
-    ? nutriments["energy-kcal_unit"]
-    : nutriments["energy_unit"];
+  normaliseItemInfo.energyUnit = nutriments["energy-kcal_unit"] ? nutriments["energy-kcal_unit"] : nutriments["energy_unit"];
   return normalisedItemInfo;
 }
 
@@ -456,9 +446,7 @@ async function updatePerformanceScore(user, score, date) {
   let conditional = "";
   let queryValues = [];
   const formattedDate = new Date().toISOString().split("T")[0];
-  date
-    ? (conditional = "WHERE date = $2 AND  user_id = $3")
-    : (conditional = `WHERE date= '${formattedDate}' AND  user_id = $2`);
+  date ? (conditional = "WHERE date = $2 AND  user_id = $3") : (conditional = `WHERE date= '${formattedDate}' AND  user_id = $2`);
   date ? (queryValues = [score, date, user[0].id]) : (queryValues = [score, user[0].id]);
   const query = `UPDATE user_perf SET perf_score = $1 ${conditional}`;
   await client.query(query, queryValues);
