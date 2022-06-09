@@ -8,7 +8,7 @@ This is the backend server of the Nutribud desktop app that handles http request
 
 ## Technologies
 
-This repository uses [node] (https://nodejs.org/api/) to run its files. The Node web framework [Express] (https://expressjs.com/) was used to write the endpoint paths and handlers. For our database we use [PostgreSQL] (https://www.postgresql.org/) to store user data online using [ElephantSQL] (https://www.elephantsql.com/).
+This repository uses [node](https://nodejs.org/api/) to run its files. The Node web framework [Express](https://expressjs.com/) was used to write the endpoint paths and handlers. For our database we use [PostgreSQL](https://www.postgresql.org/) to store user data online using [ElephantSQL](https://www.elephantsql.com/).
 
 ## Launch
 
@@ -39,7 +39,13 @@ The body of the POST request must contain:
 
 Example of a fetch request:
 
-`` await fetch(`http://localhost:8080/login`, { method: "POST", credentials: "include", headers: { "Content-Type": "application/json", }, body: JSON.stringify(userLoginDetails), }); ``
+```
+ await fetch(`http://localhost:8080/login`, {
+    method: "POST", credentials: "include",
+    headers: { "Content-Type": "application/json", },
+    body: JSON.stringify(userLoginDetails),
+    });
+```
 
 If the username is not registered or the password is wrong the server will respond with a 400 status code (bad request).
 
@@ -49,7 +55,12 @@ Logging out is done with a DELETE HTTP Method to the `/login` endpoint.
 
 Example of a fetch request:
 
-`` await fetch(`${process.env.REACT_APP_API_URL}/login`, { method: "DELETE", credentials: "include", headers: { "Content-Type": "application/json", }, }); ``
+```
+await fetch(`${process.env.REACT_APP_API_URL}/login`, {
+    method: "DELETE", credentials: "include",
+    headers: { "Content-Type": "application/json", },
+    });
+```
 
 If the user is not logged in the server will respond with a 400 status code (bad request).
 
@@ -59,7 +70,12 @@ Verifying a user is logged in is done with a GET HTTP Method to the `/login` end
 
 Example of a fetch request:
 
-`` await fetch(`${process.env.REACT_APP_API_URL}/login`, { method: "GET", credentials: "include", headers: { "Content-Type": "application/json", }, }); ``
+```
+ await fetch(`${process.env.REACT_APP_API_URL}/login`, {
+    method: "GET", credentials: "include",
+    headers: { "Content-Type": "application/json", },
+    });
+```
 
 ### Registering
 
@@ -76,11 +92,3 @@ Example of a fetch request:
 - npm install crypto
 - npm install jest --save-dev
 - npm install supertest --save-dev
-
-```
-
-```
-
-```
-
-```
