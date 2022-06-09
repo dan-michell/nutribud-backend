@@ -4,7 +4,8 @@ import cookieParser from "cookie-parser";
 import hasher from "pbkdf2-password-hash";
 import bcrypt from "bcrypt";
 import crypto from "crypto";
-import { Client } from "pg";
+import pkg from "pg";
+const { Client } = pkg;
 import fetch from "node-fetch";
 
 const baseFoodParserApiUrl =
