@@ -2,11 +2,14 @@
 
 ## Contents
 
-## Introduction
+- [Introduction](#introduction)
+- [Technologies](#technologies)
+
+## <a name="introduction"></a> Introduction
 
 This is the backend server of the Nutribud desktop app that handles http requests from the client to retrieve nutrition information and user performance, as well as post user goals and information.
 
-## Technologies
+## <a name="technologies"></a>Technologies
 
 This repository uses [node](https://nodejs.org/api/) to run its files. The Node web framework [Express](https://expressjs.com/) was used to write the endpoint paths and handlers. For our database we use [PostgreSQL](https://www.postgresql.org/) to store user data online using [ElephantSQL](https://www.elephantsql.com/). For voice and text searches we use Edamam's [Food and Grocery Database API](https://developer.edamam.com/food-database-api). For barcode searches we use [Open Food Facts API](https://openfoodfacts.github.io/api-documentation/)
 
