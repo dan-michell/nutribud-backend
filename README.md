@@ -50,6 +50,8 @@ The frontend React application requires this backend server to be running to wor
 
 ## Database Schema
 
+![database-schema](assets/database-schema.png)
+
 ## Server Endpoints
 
 ### /login
