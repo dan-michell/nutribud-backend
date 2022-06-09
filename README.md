@@ -140,7 +140,7 @@ This is done with a GET HTTP Method and the following query parameter:
 Example of a fetch request:
 
 ```
-await fetch(`http://localhost:8080/search-text?barcode=${5449000000996}`);
+await fetch(`http://localhost:8080/search-barcode?barcode=${5449000000996}`);
 ```
 
 Example response:
