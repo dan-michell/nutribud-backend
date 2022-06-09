@@ -160,7 +160,7 @@ async function getUserGoals(req, res) {
   const user = await getCurrentUser(sessionId);
   if (user.length > 0) {
     const query = "SELECT * FROM user_goals WHERE user_id = $1";
-    const userGoals = await client.query(query, [user[0].id]);
+    const userGoals = (await client.query(query, [user[0].id])).rows;
     return res.json({ response: userGoals });
   }
   return res.json({ error: "Unable to fetch goals." });

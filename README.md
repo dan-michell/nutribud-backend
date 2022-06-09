@@ -40,14 +40,14 @@ The body of the POST request **_must_** contain:
 Example of a fetch request:
 
 ```
- await fetch(`http://localhost:8080/login`, {
+await fetch(`http://localhost:8080/login`, {
     method: "POST", credentials: "include",
     headers: { "Content-Type": "application/json", },
     body: JSON.stringify({
-      username:'admin',
-      password:'somePassword',
+        username:'admin',
+        password:'somePassword',
     }),
-    });
+});
 ```
 
 If the username is not registered or the password is wrong the server will respond with a 400 status code (bad request).
@@ -62,7 +62,7 @@ Example of a fetch request:
 await fetch(`http://localhost:8080/login`, {
     method: "DELETE", credentials: "include",
     headers: { "Content-Type": "application/json", },
-    });
+});
 ```
 
 If the user is not logged in the server will respond with a 400 status code (bad request).
@@ -74,10 +74,10 @@ Verifying a user is logged in is done with a GET HTTP Method to the `/login` end
 Example of a fetch request:
 
 ```
- await fetch(`http://localhost:8080/login`, {
+await fetch(`http://localhost:8080/login`, {
     method: "GET", credentials: "include",
-    headers: { "Content-Type": "application/json", },
-    });
+    headers: { "Content-Type": "application/json"},
+});
 ```
 
 ### /register
@@ -96,17 +96,15 @@ Example of a fetch request:
 
 ```
 await fetch(`http://localhost:8080/register`, {
-      method: "POST",
-      credentials: "include",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-      username:'admin',
-      password:'somePassword',
-      passwordConfirmation:'somePassword',
+    method: "POST",
+    credentials: "include",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({
+        username:'admin',
+        password:'somePassword',
+        passwordConfirmation:'somePassword',
     }),
-    });
+});
 ```
 
 If the username is already registered or the passwords do not match the server will respond with a 400 status code (bad request).
@@ -166,12 +164,10 @@ Example of a fetch request:
 
 ```
 await fetch(`http://localhost:8080/tracking`, {
-      method: "POST",
-      credentials: "include",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
+    method: "POST",
+    credentials: "include",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({
         itemInfo: {
             name: "Bread",
             nutriments: {
@@ -180,33 +176,90 @@ await fetch(`http://localhost:8080/tracking`, {
                 Total lipid (fat): 3.24,
                 Carbohydrate, by difference: 48.68,
             },
-        amount: 50}}),
-    });
+        amount: 50
+        }
+    }),
+});
 ```
 
 If no current user is in the sessions table server will return an error message `{ error: "Need to be logged in to track items."}`
 
-#### Receiving Tracked User Items
+#### Retrieving Tracked User Items
 
-Receiving the items a user has tracked is done with a GET HTTP Method to the `/tracking` endpoint and the following query parameter:
+Retrieving the items a user has tracked is done with a GET HTTP Method to the `/tracking` endpoint and the following query parameter:
 
 - date
 
 Example of a fetch request:
 
 ```
-      await fetch (`http://localhost:8080/tracking?date=${date}`,{
-        method: "GET",
-        credentials: "include",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
+await fetch (`http://localhost:8080/tracking?date=2022-06-09`,{
+    method: "GET",
+    credentials: "include",
+    headers: { "Content-Type": "application/json"},
+});
 ```
 
 Example response:
 
 ![tracking response](assets/tracking.png)
+
+### /goals
+
+The `/goals` endpoint retrieves the goals a user has set and updates the user_goals table with new goals.
+
+#### Updating User Goals
+
+Updating a users goals is done with a PATCH HTTP Method to the `/goals` endpoint.
+
+The body of the PATCH request **_must_** contain:
+
+- calories
+- protein
+- carbs
+- fats
+- sugar
+- salt
+- fiber
+
+Example of a fetch request:
+
+```
+await fetch(`http://localhost:8080/goals`, {
+    method: "PATCH",
+    credentials: "include",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({
+        calories:2000,
+        protein:200,
+        carbs:100,
+        fats:100,
+        sugar:50,
+        salt:5,
+        fiber:100,
+    }),
+});
+```
+
+If no current user is in the sessions table server will return an error message `{ error: "Login to update nutrition goals"}`
+
+#### Retrieving User Goals
+
+Retrieving the goals a user has set is done with a GET HTTP Method to the `/goals` endpoint.
+
+Example of a fetch request:
+
+```
+await fetch(`${process.env.REACT_APP_API_URL}/goals`, {
+    method: "GET",
+    credentials: "include",
+    headers: {"Content-Type": "application/json"},
+});
+```
+
+Example response:
+
+![goals response](assets/goals.png)
 
 ## Packages installed:
 
