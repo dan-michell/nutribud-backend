@@ -243,6 +243,7 @@ async function handleUserPerformance(req, res) {
 async function loginAuthentication(username, password) {
   const query = "SELECT * FROM users WHERE username = $1";
   const existingUserCheck = await client.query(query, [username]);
+
   if (existingUserCheck.rowCount > 0) {
     const userSalt = existingUserCheck.rows[0].salt;
     const userHashedPassword = existingUserCheck.rows[0].hashed_password;
