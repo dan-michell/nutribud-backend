@@ -313,11 +313,12 @@ await fetch(`${process.env.REACT_APP_API_URL}/user-info`, {
     credentials: "include",
     headers: {"Content-Type": "application/json",},
     body: JSON.stringify({
-        name:'admin',
+        name:"user",
         weight:70,
         height:165,
         age:25,
-        gender:f}),
+        gender:"f"
+    }),
 });
 ```
 

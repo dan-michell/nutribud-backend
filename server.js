@@ -183,7 +183,7 @@ async function getUserInfo(req, res) {
   const user = await getCurrentUser(sessionId);
   if (user.length > 0) {
     const query = "SELECT * FROM user_info WHERE user_id = $1";
-    const userInfo = await client.query(query, [user[0].id]).rows;
+    const userInfo = (await client.query(query, [user[0].id])).rows;
     return res.json({ response: userInfo });
   }
   return res.json({ error: "Unable to fetch info." });
