@@ -122,10 +122,24 @@ This is done with a GET HTTP Method and the following query parameter:
 Example of a fetch request:
 
 ```
-await fetch(`http://localhost:8080/search-text?item=${encodeURIComponent(bread)}`);
+await fetch(`http://localhost:8080/search-text?item=${encodeURIComponent('bread')}`);
 ```
 
 If the fetch request does no have an item query parameter the server will respond with a 400 status code (bad request).
+
+### /search-barcode
+
+The `search-barcode` endpoint handles requests to [Open Food Facts API](https://openfoodfacts.github.io/api-documentation/) and returns nutritional information for a given item.
+
+This is done with a GET HTTP Method and the following query parameter:
+
+- barcode
+
+Example of a fetch request:
+
+```
+await fetch(`http://localhost:8080/search-text?barcode=${5449000000996}`);
+```
 
 ## Packages installed:
 
