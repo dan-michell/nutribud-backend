@@ -2,6 +2,34 @@
 
 ## Contents
 
+- [Introduction](#introduction)
+- [Technologies](#technologies)
+- [Launch](#launch)
+- [Database Schema](#database-schema)
+- [Server Endpoints](#server-endpoints)
+  - [/login](#login)
+    - [Logging In](#logging-in)
+    - [Logging Out](#logging-out)
+    - [Verifying a User is Logged In](#verifying-a-user-is-logged-in)
+  - [/register](#register)
+  - [/search-text](#search-text)
+  - [/search-barcode](#search-barcode)
+  - [/tracking](#tracking)
+    - [Tracking an Item](#tracking-an-item)
+    - [Retrieving Tracked User Items](#retrieving-tracked-user-items)
+  - [/goals](#goals)
+    - [Updating User Goals](#updating-user-goals)
+    - [Retrieving User Goals](#retrieving-user-goals)
+  - [/user-info](#user-info)
+    - [Setting User Information](#setting-user-information)
+    - [Updating User Information](#updating-user-information)
+    - [Retrieving User Information](#retrieving-user-information)
+  - [/performance-history](#performance-history)
+    - [Updating Performance Score](#updating-performance-score)
+    - [Retrieving Performance Score](#retrieving-performance-score)
+- [Packages Installed](#packages-installed)
+- [Developers](#developers)
+
 ## Introduction
 
 This is the backend server of the Nutribud desktop app that handles http requests from the client to retrieve nutrition information and user performance, as well as post user goals and information.
@@ -140,7 +168,7 @@ This is done with a GET HTTP Method and the following query parameter:
 Example of a fetch request:
 
 ```
-await fetch(`http://localhost:8080/search-text?barcode=${5449000000996}`);
+await fetch(`http://localhost:8080/search-barcode?barcode=${5449000000996}`);
 ```
 
 Example response:
@@ -263,11 +291,154 @@ Example response:
 
 ### /user-info
 
-The `user-info` endpoint handles user information such as weight, height, name, gender. The endpoint handles setting, retrieving and updating the information.
+The `/user-info` endpoint handles user information such as weight, height, name, gender. The endpoint handles setting, retrieving and updating the information.
 
 #### Setting User Information
 
+Setting the user information is done with a POST HTTP Method to the `/user-info` endpoint.
+
+The body of the POST request **_must_** contain:
+
+- name
+- age
+- weight
+- height
+- gender
+
+Example of a fetch request:
+
+```
+await fetch(`${process.env.REACT_APP_API_URL}/user-info`, {
+    method: "POST",
+    credentials: "include",
+    headers: {"Content-Type": "application/json",},
+    body: JSON.stringify({
+        name:'admin',
+        weight:70,
+        height:165,
+        age:25,
+        gender:f}),
+});
+```
+
+#### Updating User Information
+
+Setting the user information is done with a PATCH HTTP Method to the `/user-info` endpoint.
+
+The body of the PATCH request **_must_** contain:
+
+- name
+- age
+- weight
+- height
+- gender
+
+Example of a fetch request:
+
+```
+await fetch(`${process.env.REACT_APP_API_URL}/user-info`, {
+    method: "PATCH",
+    credentials: "include",
+    headers: {"Content-Type": "application/json",},
+    body: JSON.stringify({
+        name:"user",
+        weight:70,
+        height:165,
+        age:25,
+        gender:"f"
+    }),
+});
+```
+
+#### Retrieving User Information
+
+Setting the user information is done with a GET HTTP Method to the `/user-info` endpoint.
+
+Example of a fetch request:
+
+```
+await fetch(`${process.env.REACT_APP_API_URL}/user-info`, {
+      method: "GET",
+      credentials: "include",
+      headers: { "Content-Type": "application/json",},
+});
+```
+
+Example response:
+
+![user-info response](assets/user-info.png)
+
+### /performance-history
+
+The `/performance-history` endpoint handles tracking how complete the user's goals are by updating their performance score in the user_perf table as well as retrieving performance history.
+
+#### Updating Performance Score
+
+Updating the performance score is done with a POST HTTP Method to the `/performance-history` endpoint.
+
+The body of the POST request should contain:
+
+- score (required)
+- date (if missing current date is used)
+
+Example of a fetch request:
+
+```
+await fetch(`${process.env.REACT_APP_API_URL}/performance-history`, {
+      method: "POST",
+      credentials: "include",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ score: 69 }),
+    });
+```
+
+#### Retrieving Performance Score
+
+Retrieving the performance score id done with a GET HTTP Method to the `/performance-history` endpoint and 2 optional parameters:
+
+- date
+- allTime
+
+Please note:
+
+- _date_ and _allTime_ cannot be used at the same time
+- when _date_ is used, server will return the performance for that date
+- when _date_ is omitted, server will return the performance for the current date
+- when _allTime_ is used, server will return the performance for all tracked dates
+
+Example of a fetch request:
+
+```
+await fetch(`${process.env.REACT_APP_API_URL}/performance-history?allTime=true`, {
+    method: "GET",
+    credentials: "include",
+    headers: {"Content-Type": "application/json",},
+});
+```
+
+Example response:
+
+![performance-history?allTime=true response](assets/performance-history-allTime.png)
+
+Example2 of a fetch request:
+
+```
+await fetch(`${process.env.REACT_APP_API_URL}/performance-history?date=2022-06-08`, {
+    method: "GET",
+    credentials: "include",
+    headers: {"Content-Type": "application/json",},
+});
+```
+
+Example response:
+
+![performance-history?date=2022-06-08 response](assets/performance-history-date.png)
+
+
 ## Packages installed:
+
 
 - npm install express
 - npm install cookie-parser
@@ -278,3 +449,12 @@ The `user-info` endpoint handles user information such as weight, height, name, 
 - npm install crypto
 - npm install jest --save-dev
 - npm install supertest --save-dev
+
+## Developers
+
+The Developers that worked on this project are:
+
+Project Manager: [Ibrahim Ahmed](https://github.com/Ibahmed1)
+Architect & DevOps: [Dan Michell](https://github.com/dan-michell)
+Quality Assurance: [Elisaveta Zobeva](https://github.com/e-zob)
+Quality Assurance: [Kainan Hassan](https://github.com/kainanh)
