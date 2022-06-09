@@ -1,10 +1,10 @@
-const express = require("express");
-const cors = require("cors");
-const cookieParser = require("cookie-parser");
-const hasher = require("pbkdf2-password-hash");
-const bcrypt = require("bcrypt");
-const crypto = require("crypto");
-const { Client } = require("pg");
+import express from "express";
+import cors from "cors";
+import cookieParser from "cookie-parser";
+import hasher from "pbkdf2-password-hash";
+import bcrypt from "bcrypt";
+import crypto from "crypto";
+import { Client } from "pg";
 import fetch from "node-fetch";
 
 const baseFoodParserApiUrl =
