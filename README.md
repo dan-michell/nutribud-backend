@@ -339,6 +339,36 @@ Example response:
 
 ![user-info response](assets/user-info.png)
 
+### /performance-history
+
+The `/performance-history` endpoint handles tracking how complete the user's goals are by updating their performance score in the user_perf table as well as retrieving performance history.
+
+#### Updating Performance Score
+
+Updating the performance score is done with a POST HTTP Method to the `/performance-history` endpoint.
+
+The body of the POST request should contain:
+
+- score (required)
+- date (if missing current date is used)
+
+Example of a fetch request:
+
+```
+await fetch(`${process.env.REACT_APP_API_URL}/performance-history`, {
+      method: "POST",
+      credentials: "include",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ score: 69 }),
+    });
+```
+
+#### Retrieving Performance Score
+
+Retrieving the performance score id done with a GET HTTP Method to the `/performance-history` endpoint and 2 optional parameters
+
 ## Packages installed:
 
 - npm install express
