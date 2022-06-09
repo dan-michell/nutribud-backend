@@ -202,7 +202,7 @@ await fetch (`http://localhost:8080/tracking?date=2022-06-09`,{
 
 Example response:
 
-![tracking response](assets/tracking.png)
+![tracking response](assets/goals.png)
 
 ### /goals
 
