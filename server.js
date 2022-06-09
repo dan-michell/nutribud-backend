@@ -49,7 +49,7 @@ app.post("/performance-history", handleUserPerformance);
 app.listen(PORT, () => {
   console.log(`App listening on port ${PORT}`);
 });
-module.exports = app;
+export default app;
 
 async function handleLogin(req, res) {
   const { username, password } = req.body;
