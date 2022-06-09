@@ -308,7 +308,7 @@ The body of the POST request **_must_** contain:
 Example of a fetch request:
 
 ```
-await fetch(`${process.env.REACT_APP_API_URL}/user-info`, {
+await fetch(`http://localhost:8080/user-info`, {
     method: "POST",
     credentials: "include",
     headers: {"Content-Type": "application/json",},
@@ -336,7 +336,7 @@ The body of the PATCH request **_must_** contain:
 Example of a fetch request:
 
 ```
-await fetch(`${process.env.REACT_APP_API_URL}/user-info`, {
+await fetch(`http://localhost:8080/user-info`, {
     method: "PATCH",
     credentials: "include",
     headers: {"Content-Type": "application/json",},
@@ -357,7 +357,7 @@ Setting the user information is done with a GET HTTP Method to the `/user-info` 
 Example of a fetch request:
 
 ```
-await fetch(`${process.env.REACT_APP_API_URL}/user-info`, {
+await fetch(`http://localhost:8080/user-info`, {
       method: "GET",
       credentials: "include",
       headers: { "Content-Type": "application/json",},
@@ -384,7 +384,7 @@ The body of the POST request should contain:
 Example of a fetch request:
 
 ```
-await fetch(`${process.env.REACT_APP_API_URL}/performance-history`, {
+await fetch(`http://localhost:8080/performance-history`, {
       method: "POST",
       credentials: "include",
       headers: {
@@ -411,7 +411,7 @@ Please note:
 Example of a fetch request:
 
 ```
-await fetch(`${process.env.REACT_APP_API_URL}/performance-history?allTime=true`, {
+await fetch(`http://localhost:8080/performance-history?allTime=true`, {
     method: "GET",
     credentials: "include",
     headers: {"Content-Type": "application/json",},
@@ -425,7 +425,7 @@ Example response:
 Example2 of a fetch request:
 
 ```
-await fetch(`${process.env.REACT_APP_API_URL}/performance-history?date=2022-06-08`, {
+await fetch(`http://localhost:8080/performance-history?date=2022-06-08`, {
     method: "GET",
     credentials: "include",
     headers: {"Content-Type": "application/json",},
@@ -436,9 +436,7 @@ Example response:
 
 ![performance-history?date=2022-06-08 response](assets/performance-history-date.png)
 
-
 ## Packages installed:
-
 
 - npm install express
 - npm install cookie-parser
