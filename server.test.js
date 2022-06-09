@@ -1,5 +1,5 @@
-const app = require("./server");
-const supertest = require("supertest");
+import app from "./server";
+import supertest from "supertest";
 const request = supertest(app);
 
 describe("POST login handler", () => {
