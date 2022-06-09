@@ -5,7 +5,7 @@ const hasher = require("pbkdf2-password-hash");
 const bcrypt = require("bcrypt");
 const crypto = require("crypto");
 const { Client } = require("pg");
-const fetch = (...args) => import("node-fetch").then(({ default: fetch }) => fetch(...args));
+import fetch from "node-fetch";
 
 const baseFoodParserApiUrl =
   "https://api.edamam.com/api/food-database/v2/parser?app_id=45463206&app_key=1fa94f20926c60638eb14a7abca872b3";
