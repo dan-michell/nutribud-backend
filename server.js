@@ -1,11 +1,12 @@
-const express = require("express");
-const cors = require("cors");
-const cookieParser = require("cookie-parser");
-const hasher = require("pbkdf2-password-hash");
-const bcrypt = require("bcrypt");
-const crypto = require("crypto");
-const { Client } = require("pg");
-const fetch = (...args) => import("node-fetch").then(({ default: fetch }) => fetch(...args));
+import express from "express";
+import cors from "cors";
+import cookieParser from "cookie-parser";
+import hasher from "pbkdf2-password-hash";
+import bcrypt from "bcrypt";
+import crypto from "crypto";
+import pkg from "pg";
+const { Client } = pkg;
+import fetch from "node-fetch";
 
 const baseFoodParserApiUrl = "https://api.edamam.com/api/food-database/v2/parser?app_id=45463206&app_key=1fa94f20926c60638eb14a7abca872b3";
 const baseFoodNutrientsApiUrl = "https://api.edamam.com/api/food-database/v2/nutrients?app_id=45463206&app_key=1fa94f20926c60638eb14a7abca872b3";
@@ -46,7 +47,7 @@ app.post("/performance-history", handleUserPerformance);
 app.listen(PORT, () => {
   console.log(`App listening on port ${PORT}`);
 });
-module.exports = app;
+export default app;
 
 async function handleLogin(req, res) {
   const { username, password } = req.body;
@@ -98,11 +99,13 @@ async function getLoggedInUser(req, res) {
 
 async function handleItemSearchText(req, res) {
   const { item } = req.query;
-  if (!item) return res.json({ error: "Missing item" }).status(400);
+  if (!item) return res.status(400).json({ error: "Missing item" });
   const parsedResponse = await fetch(`${baseFoodParserApiUrl}&ingr=${item}&nutrition-type=cooking`);
   const parsedData = await parsedResponse.json();
   const formattedParsedData = formatParsedData(parsedData);
-  return formattedParsedData.length > 0 ? res.json({ response: formattedParsedData }) : res.json({ error: `${item} not found` }).status(400);
+  return formattedParsedData.length > 0
+    ? res.json({ response: formattedParsedData })
+    : res.json({ error: `${item} not found` });
 }
 
 async function handleItemSearchBarcode(req, res) {
@@ -243,6 +246,7 @@ async function handleUserPerformance(req, res) {
 async function loginAuthentication(username, password) {
   const query = "SELECT * FROM users WHERE username = $1";
   const existingUserCheck = await client.query(query, [username]);
+
   if (existingUserCheck.rowCount > 0) {
     const userSalt = existingUserCheck.rows[0].salt;
     const userHashedPassword = existingUserCheck.rows[0].hashed_password;

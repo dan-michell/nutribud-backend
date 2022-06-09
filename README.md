@@ -230,7 +230,7 @@ await fetch (`http://localhost:8080/tracking?date=2022-06-09`,{
 
 Example response:
 
-![tracking response](assets/goals.png)
+![tracking response](assets/tracking.png)
 
 ### /goals
 
@@ -436,7 +436,9 @@ Example response:
 
 ![performance-history?date=2022-06-08 response](assets/performance-history-date.png)
 
-## Packages installed
+
+## Packages installed:
+
 
 - npm install express
 - npm install cookie-parser
