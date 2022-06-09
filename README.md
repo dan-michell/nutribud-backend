@@ -151,7 +151,62 @@ Example response:
 
 ### /tracking
 
-The `/tracking` endpoint handles
+The `/tracking` endpoint handles adding item information to the tracked_items and user_history tables and retrieving item history for a given user.
+
+#### Tracking an item
+
+Tracking an item is done with a POST HTTP Method to the `/tracking` endpoint.
+
+The body of the POST request **_must_** contain:
+
+-itemInfo
+-amount
+
+Example of a fetch request:
+
+```
+await fetch(`http://localhost:8080/tracking`, {
+      method: "POST",
+      credentials: "include",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        itemInfo: {
+            name: "Bread",
+            nutriments: {
+                Energy: 267,
+                Protein: 10.72,
+                Total lipid (fat): 3.24,
+                Carbohydrate, by difference: 48.68,
+            },
+        amount: 50}}),
+    });
+```
+
+If no current user is in the sessions table server will return an error message `{ error: "Need to be logged in to track items."}`
+
+#### Receiving Tracked User Items
+
+Receiving the items a user has tracked is done with a GET HTTP Method to the `/tracking` endpoint and the following query parameter:
+
+- date
+
+Example of a fetch request:
+
+```
+      await fetch (`http://localhost:8080/tracking?date=${date}`,{
+        method: "GET",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+```
+
+Example response:
+
+![tracking response](assets/tracking.png)
 
 ## Packages installed:
 
