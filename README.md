@@ -20,15 +20,17 @@ Start by forking this backend repository, and then cloning the repository into y
 
 The frontend React application requires this backend server to be running to work correctly as it uses http://localhost:8080 as the API link in the development environment variables.
 
-## Server Endpoints
-
 ## Database Schema
 
-### Logging In
+## Server Endpoints
 
-The `/login` endpoint handles adding an existing user's id to the sessions table along with the cookie session id.
+### Logging In and Out
 
-This is done with the POST HTTP Method to the /scores endpoint.
+The `/login` endpoint handles adding an existing user's id to the sessions table along with the cookie session id, deleting a user from the sessions table as well as verifying a user is logged in.
+
+#### Logging In
+
+Logging in is done with the POST HTTP Method to the `/login` endpoint.
 
 The body of the POST request must contain:
 
@@ -41,7 +43,23 @@ Example of a fetch request:
 
 If the username is not registered or the password is wrong the server will respond with a 400 status code (bad request).
 
-### Logging Out
+#### Logging Out
+
+Logging out is done with a DELETE HTTP Method to the `/login` endpoint.
+
+Example of a fetch request:
+
+`` await fetch(`${process.env.REACT_APP_API_URL}/login`, { method: "DELETE", credentials: "include", headers: { "Content-Type": "application/json", }, }); ``
+
+If the user is not logged in the server will respond with a 400 status code (bad request).
+
+#### Verifying a User is Logged In
+
+Verifying a user is logged in is done with a GET HTTP Method to the `/login` endpoint.
+
+Example of a fetch request:
+
+`` await fetch(`${process.env.REACT_APP_API_URL}/login`, { method: "GET", credentials: "include", headers: { "Content-Type": "application/json", }, }); ``
 
 ### Registering
 
@@ -58,6 +76,10 @@ If the username is not registered or the password is wrong the server will respo
 - npm install crypto
 - npm install jest --save-dev
 - npm install supertest --save-dev
+
+```
+
+```
 
 ```
 
