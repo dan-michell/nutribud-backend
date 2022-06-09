@@ -461,6 +461,9 @@ Example response:
 The Developers that worked on this project are:
 
 Project Manager: [Ibrahim Ahmed](https://github.com/Ibahmed1)
+
 Architect & DevOps: [Dan Michell](https://github.com/dan-michell)
+
 Quality Assurance: [Elisaveta Zobeva](https://github.com/e-zob)
+
 Quality Assurance: [Kainan Hassan](https://github.com/kainanh)
