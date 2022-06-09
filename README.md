@@ -5,12 +5,36 @@
 - [Introduction](#introduction)
 - [Technologies](#technologies)
 - [Launch](#launch)
+- [Database Schema](#database-schema)
+- [Server Endpoints](#server-endpoints)
+  - [/login](#login)
+    - [Logging In](#logging-in)
+    - [Logging Out](#logging-out)
+    - [Verifying a User is Logged In](#verifying-a-user-is-logged-in)
+  - [/register](#register)
+  - [/search-text](#search-text)
+  - [/search-barcode](#search-barcode)
+  - [/tracking](#tracking)
+    - [Tracking an Item](#tracking-an-item)
+    - [Retrieving Tracked User Items](#retrieving-tracked-user-items)
+  - [/goals](#goals)
+    - [Updating User Goals](#updating-user-goals)
+    - [Retrieving User Goals](#retrieving-user-goals)
+  - [/user-info](#user-info)
+    - [Setting User Information](#setting-user-information)
+    - [Updating User Information](#updating-user-information)
+    - [Retrieving User Information](#retrieving-user-information)
+  - [/performance-history](#performance-history)
+    - [Updating Performance Score](#updating-performance-score)
+    - [Retrieving Performance Score](#retrieving-performance-score)
+- [Packages Installed](#packages-installed)
+- [Developers](#developers)
 
-## <a name="introduction"></a> Introduction
+## Introduction
 
 This is the backend server of the Nutribud desktop app that handles http requests from the client to retrieve nutrition information and user performance, as well as post user goals and information.
 
-## <a name="technologies"></a>Technologies
+## Technologies
 
 This repository uses [node](https://nodejs.org/api/) to run its files. The Node web framework [Express](https://expressjs.com/) was used to write the endpoint paths and handlers. For our database we use [PostgreSQL](https://www.postgresql.org/) to store user data online using [ElephantSQL](https://www.elephantsql.com/). For voice and text searches we use Edamam's [Food and Grocery Database API](https://developer.edamam.com/food-database-api). For barcode searches we use [Open Food Facts API](https://openfoodfacts.github.io/api-documentation/)
 
@@ -412,16 +436,7 @@ Example response:
 
 ![performance-history?date=2022-06-08 response](assets/performance-history-date.png)
 
-## Developers
-
-The Developers that worked on this project are:
-
-Project Manager: [Ibrahim Ahmed](https://github.com/Ibahmed1)
-Architect & DevOps: [Dan Michell](https://github.com/dan-michell)
-Quality Assurance: [Elisaveta Zobeva](https://github.com/e-zob)
-Quality Assurance: [Kainan Hassan](https://github.com/kainanh)
-
-## Packages installed:
+## Packages installed
 
 - npm install express
 - npm install cookie-parser
@@ -432,3 +447,12 @@ Quality Assurance: [Kainan Hassan](https://github.com/kainanh)
 - npm install crypto
 - npm install jest --save-dev
 - npm install supertest --save-dev
+
+## Developers
+
+The Developers that worked on this project are:
+
+Project Manager: [Ibrahim Ahmed](https://github.com/Ibahmed1)
+Architect & DevOps: [Dan Michell](https://github.com/dan-michell)
+Quality Assurance: [Elisaveta Zobeva](https://github.com/e-zob)
+Quality Assurance: [Kainan Hassan](https://github.com/kainanh)
