@@ -408,6 +408,15 @@ Example response:
 
 ![performance-history?date=2022-06-08 response](assets/performance-history-date.png)
 
+## Developers
+
+The Developers that worked on this project are:
+
+Project Manager: [Ibrahim Ahmed](https://github.com/Ibahmed1)
+Architect & DevOps: [Dan Michell](https://github.com/dan-michell)
+Quality Assurance: [Elisaveta Zobeva](https://github.com/e-zob)
+Quality Assurance: [Kainan Hassan](https://github.com/kainanh)
+
 ## Packages installed:
 
 - npm install express
