@@ -54,6 +54,16 @@ node server.js
 
 The frontend React application requires this backend server to be running to work correctly as it uses http://localhost:8080 as the API link in the development environment variables.
 
+## Testing
+
+To run tests run the following command into your terminal:
+
+```
+npm test
+```
+
+Tests can be found in the [server.test.js](server.test.js) file.
+
 ## Database Schema
 
 ![database-schema](assets/database-schema.png)
