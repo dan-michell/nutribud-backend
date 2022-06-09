@@ -128,6 +128,7 @@ await fetch(`http://localhost:8080/search-text?item=${encodeURIComponent('bread'
 If the fetch request does no have an item query parameter the server will respond with a 400 status code (bad request).
 
 Example response:
+
 ![search-text response](assets/search-text.png)
 
 ### /search-barcode
@@ -143,6 +144,10 @@ Example of a fetch request:
 ```
 await fetch(`http://localhost:8080/search-text?barcode=${5449000000996}`);
 ```
+
+Example response:
+
+![search-barcode response](assets/search-barcode.png)
 
 ### /tracking
 
