@@ -367,7 +367,45 @@ await fetch(`${process.env.REACT_APP_API_URL}/performance-history`, {
 
 #### Retrieving Performance Score
 
-Retrieving the performance score id done with a GET HTTP Method to the `/performance-history` endpoint and 2 optional parameters
+Retrieving the performance score id done with a GET HTTP Method to the `/performance-history` endpoint and 2 optional parameters:
+
+- date
+- allTime
+
+Please note:
+
+- _date_ and _allTime_ cannot be used at the same time
+- when _date_ is used, server will return the performance for that date
+- when _date_ is omitted, server will return the performance for the current date
+- when _allTime_ is used, server will return the performance for all tracked dates
+
+Example of a fetch request:
+
+```
+await fetch(`${process.env.REACT_APP_API_URL}/performance-history?allTime=true`, {
+    method: "GET",
+    credentials: "include",
+    headers: {"Content-Type": "application/json",},
+});
+```
+
+Example response:
+
+![performance-history?allTime=true response](assets/performance-history-allTime.png)
+
+Example2 of a fetch request:
+
+```
+await fetch(`${process.env.REACT_APP_API_URL}/performance-history?date=2022-06-08`, {
+    method: "GET",
+    credentials: "include",
+    headers: {"Content-Type": "application/json",},
+});
+```
+
+Example response:
+
+![performance-history?date=2022-06-08 response](assets/performance-history-date.png)
 
 ## Packages installed:
 
