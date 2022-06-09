@@ -127,6 +127,9 @@ await fetch(`http://localhost:8080/search-text?item=${encodeURIComponent('bread'
 
 If the fetch request does no have an item query parameter the server will respond with a 400 status code (bad request).
 
+Example response:
+![search-text response](assets/search-text.png)
+
 ### /search-barcode
 
 The `search-barcode` endpoint handles requests to [Open Food Facts API](https://openfoodfacts.github.io/api-documentation/) and returns nutritional information for a given item.
@@ -140,6 +143,10 @@ Example of a fetch request:
 ```
 await fetch(`http://localhost:8080/search-text?barcode=${5449000000996}`);
 ```
+
+### /tracking
+
+The `/tracking` endpoint handles
 
 ## Packages installed:
 
