@@ -24,7 +24,7 @@ The frontend React application requires this backend server to be running to wor
 
 ## Server Endpoints
 
-### Logging In and Out
+### /login
 
 The `/login` endpoint handles adding an existing user's id to the sessions table along with the cookie session id, deleting a user from the sessions table as well as verifying a user is logged in.
 
@@ -32,10 +32,10 @@ The `/login` endpoint handles adding an existing user's id to the sessions table
 
 Logging in is done with the POST HTTP Method to the `/login` endpoint.
 
-The body of the POST request must contain:
+The body of the POST request **_must_** contain:
 
-- The username
-- The password
+- username
+- password
 
 Example of a fetch request:
 
@@ -43,7 +43,10 @@ Example of a fetch request:
  await fetch(`http://localhost:8080/login`, {
     method: "POST", credentials: "include",
     headers: { "Content-Type": "application/json", },
-    body: JSON.stringify(userLoginDetails),
+    body: JSON.stringify({
+      username:'admin',
+      password:'somePassword',
+    }),
     });
 ```
 
@@ -56,7 +59,7 @@ Logging out is done with a DELETE HTTP Method to the `/login` endpoint.
 Example of a fetch request:
 
 ```
-await fetch(`${process.env.REACT_APP_API_URL}/login`, {
+await fetch(`http://localhost:8080/login`, {
     method: "DELETE", credentials: "include",
     headers: { "Content-Type": "application/json", },
     });
@@ -71,15 +74,42 @@ Verifying a user is logged in is done with a GET HTTP Method to the `/login` end
 Example of a fetch request:
 
 ```
- await fetch(`${process.env.REACT_APP_API_URL}/login`, {
+ await fetch(`http://localhost:8080/login`, {
     method: "GET", credentials: "include",
     headers: { "Content-Type": "application/json", },
     });
 ```
 
-### Registering
+### /register
 
-###
+The `/register` endpoint handles adding a new user to the users table.
+
+This is done with a POST HTTP Method to the `/register` endpoint.
+
+The body of the POST request **_must_** contain:
+
+- username
+- password
+- passwordConfirmation
+
+Example of a fetch request:
+
+```
+await fetch(`${process.env.REACT_APP_API_URL}/register`, {
+      method: "POST",
+      credentials: "include",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+      username:'admin',
+      password:'somePassword',
+      passwordConfirmation:'somePassword',
+    }),
+    });
+```
+
+If the username is already registered or the passwords do not match the server will respond with a 400 status code (bad request).
 
 ## Packages installed:
 
