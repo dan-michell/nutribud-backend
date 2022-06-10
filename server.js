@@ -8,10 +8,8 @@ import pkg from "pg";
 const { Client } = pkg;
 import fetch from "node-fetch";
 
-const baseFoodParserApiUrl =
-  "https://api.edamam.com/api/food-database/v2/parser?app_id=45463206&app_key=1fa94f20926c60638eb14a7abca872b3";
-const baseFoodNutrientsApiUrl =
-  "https://api.edamam.com/api/food-database/v2/nutrients?app_id=45463206&app_key=1fa94f20926c60638eb14a7abca872b3";
+const baseFoodParserApiUrl = "https://api.edamam.com/api/food-database/v2/parser?app_id=45463206&app_key=1fa94f20926c60638eb14a7abca872b3";
+const baseFoodNutrientsApiUrl = "https://api.edamam.com/api/food-database/v2/nutrients?app_id=45463206&app_key=1fa94f20926c60638eb14a7abca872b3";
 
 const app = express();
 const PORT = process.env.PORT || 8080;
@@ -105,9 +103,7 @@ async function handleItemSearchText(req, res) {
   const parsedResponse = await fetch(`${baseFoodParserApiUrl}&ingr=${item}&nutrition-type=cooking`);
   const parsedData = await parsedResponse.json();
   const formattedParsedData = formatParsedData(parsedData);
-  return formattedParsedData.length > 0
-    ? res.json({ response: formattedParsedData })
-    : res.json({ error: `${item} not found` });
+  return formattedParsedData.length > 0 ? res.json({ response: formattedParsedData }) : res.json({ error: `${item} not found` });
 }
 
 async function handleItemSearchBarcode(req, res) {
@@ -128,6 +124,7 @@ async function handleItemSearchBarcode(req, res) {
 }
 
 async function handleTrackItem(req, res) {
+  let { date, time } = req.query;
   let { itemInfo, amount } = req.body;
   const sessionId = req.cookies.sessionId;
   const user = await getCurrentUser(sessionId);
@@ -136,9 +133,9 @@ async function handleTrackItem(req, res) {
   }
   const normalisedItemInfo = await normaliseItemInfo(itemInfo);
   if (user.length > 0) {
-    const trackedItemsQuery = "INSERT INTO tracked_items (item_info) VALUES ($1)";
+    let trackedItemsQuery = "INSERT INTO tracked_items (item_info) VALUES ($1)";
     await client.query(trackedItemsQuery, [normalisedItemInfo]);
-    await addToUserHistory(normalisedItemInfo, amount, user[0]);
+    await addToUserHistory(normalisedItemInfo, amount, user[0], date, time);
     return res.json({ response: "Item track success!" });
   }
   return res.json({ error: "Need to be logged in to track items." });
@@ -177,8 +174,7 @@ async function updateUserGoals(req, res) {
   const sessionId = req.cookies.sessionId;
   const user = await getCurrentUser(sessionId);
   if (user.length > 0) {
-    const query =
-      "UPDATE user_goals SET calories = $1, protein = $2, carbs = $3, fats = $4, sugar = $5, salt = $6, fiber = $7 WHERE user_id = $8";
+    const query = "UPDATE user_goals SET calories = $1, protein = $2, carbs = $3, fats = $4, sugar = $5, salt = $6, fiber = $7 WHERE user_id = $8";
     await client.query(query, [calories, protein, carbs, fats, sugar, salt, fiber, user[0].id]);
     return res.json({ response: "Successfully updated nutrition goals." });
   }
@@ -284,16 +280,18 @@ async function createSessionId(userId) {
 }
 
 async function getCurrentUser(sessionId) {
-  const query =
-    "SELECT * FROM users JOIN sessions ON users.id = sessions.user_id WHERE sessions.created_at < NOW() + INTERVAL '7 DAYS' AND sessions.uuid = $1";
+  const query = "SELECT * FROM users JOIN sessions ON users.id = sessions.user_id WHERE sessions.created_at < NOW() + INTERVAL '7 DAYS' AND sessions.uuid = $1";
   const user = await client.query(query, [sessionId]);
   return user.rows;
 }
 
-async function addToUserHistory(itemInfo, amount, userInfo) {
+async function addToUserHistory(itemInfo, amount, userInfo, date, time) {
   const trackedItemId = await getTrackedItemId(itemInfo);
-  const query = "INSERT INTO user_history (item_id, user_id, serving_size_g) VALUES ($1, $2, $3)";
-  await client.query(query, [trackedItemId, userInfo.id, amount]);
+  let query = "INSERT INTO user_history (item_id, user_id, serving_size_g) VALUES ($1, $2, $3)";
+  if (date && time) {
+    query = "INSERT INTO user_history (item_id, user_id, serving_size_g, created_at, time) VALUES ($1, $2, $3, $4, $5)";
+    await client.query(query, [trackedItemId, userInfo.id, amount, date, time]);
+  } else await client.query(query, [trackedItemId, userInfo.id, amount]);
 }
 
 async function getTrackedItemId(itemInfo) {
@@ -429,9 +427,7 @@ function normaliseBarcodeData(itemInfo) {
   const normalisedItemInfo = {};
   const nutriments = itemInfo.nutriments;
   normalisedItemInfo.name = itemInfo.name;
-  normalisedItemInfo.calories = nutriments["energy-kcal_100g"]
-    ? nutriments["energy-kcal_100g"]
-    : nutriments["energy_100g"];
+  normalisedItemInfo.calories = nutriments["energy-kcal_100g"] ? nutriments["energy-kcal_100g"] : nutriments["energy_100g"];
   normalisedItemInfo.protein = nutriments["proteins_100g"];
   normalisedItemInfo.carbs = nutriments["carbohydrates_100g"];
   normalisedItemInfo.fats = nutriments["fat_100g"];
@@ -440,9 +436,7 @@ function normaliseBarcodeData(itemInfo) {
   normalisedItemInfo.fiber = nutriments["fiber_100g"];
   normalisedItemInfo.fatSaturated = nutriments["saturated-fat_100g"];
   normalisedItemInfo.novaGroup = nutriments["nova-group_100g"];
-  normaliseItemInfo.energyUnit = nutriments["energy-kcal_unit"]
-    ? nutriments["energy-kcal_unit"]
-    : nutriments["energy_unit"];
+  normaliseItemInfo.energyUnit = nutriments["energy-kcal_unit"] ? nutriments["energy-kcal_unit"] : nutriments["energy_unit"];
   return normalisedItemInfo;
 }
 
@@ -460,9 +454,7 @@ async function updatePerformanceScore(user, score, date) {
   let conditional = "";
   let queryValues = [];
   const formattedDate = new Date().toISOString().split("T")[0];
-  date
-    ? (conditional = "WHERE date = $2 AND  user_id = $3")
-    : (conditional = `WHERE date= '${formattedDate}' AND  user_id = $2`);
+  date ? (conditional = "WHERE date = $2 AND  user_id = $3") : (conditional = `WHERE date= '${formattedDate}' AND  user_id = $2`);
   date ? (queryValues = [score, date, user[0].id]) : (queryValues = [score, user[0].id]);
   const query = `UPDATE user_perf SET perf_score = $1 ${conditional}`;
   await client.query(query, queryValues);
